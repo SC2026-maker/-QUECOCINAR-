@@ -23,11 +23,23 @@
     <main class="max-w-md mx-auto p-4 space-y-6">
 
       <!-- Selector de Ingredientes Agrupados por Categorías -->
-      <section class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 space-y-3">
-        <h2 class="font-bold text-slate-700 text-sm flex items-center gap-2">
-          <i class="fa-solid fa-basket-shopping text-amber-500"></i> ¿Qué tenés en la heladera?
-        </h2>
-        <p class="text-[11px] text-slate-400">Toca cada grupo para desplegar sus ingredientes:</p>
+      <section class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 space-y-4">
+        <div class="flex flex-col gap-2">
+          <h2 class="font-bold text-slate-700 text-sm flex items-center gap-2">
+            <i class="fa-solid fa-basket-shopping text-amber-500"></i> ¿Qué tenés en la heladera?
+          </h2>
+          <p class="text-[11px] text-slate-400">Toca cada grupo para desplegar sus ingredientes:</p>
+        </div>
+
+        <!-- Modo de Filtro (Estricto vs Flexible) -->
+        <div class="bg-slate-100 p-1 rounded-xl flex text-xs font-semibold">
+          <button id="btnModoFlexible" onclick="cambiarModoFiltro('flexible')" class="flex-1 py-1.5 rounded-lg text-center transition bg-white text-amber-600 shadow-sm">
+            <i class="fa-solid fa-filter text-[10px] mr-1"></i> Coincidencia parcial
+          </button>
+          <button id="btnModoEstricto" onclick="cambiarModoFiltro('estricto')" class="flex-1 py-1.5 rounded-lg text-center transition text-slate-500 hover:text-slate-700">
+            <i class="fa-solid fa-lock text-[10px] mr-1"></i> Solo lo que tengo
+          </button>
+        </div>
 
         <div id="contenedorCategorias" class="space-y-2 pt-1">
           <span class="text-xs text-slate-400 italic">Cargando ingredientes...</span>
@@ -68,8 +80,8 @@
 
     let recetasBase = [];
     let ingredientesSeleccionados = new Set();
+    let modoFiltro = 'flexible'; // 'flexible' o 'estricto'
 
-    // Diccionario de clasificación automática por palabras clave
     const DICCIONARIO_CATEGORIAS = {
       carnes: {
         titulo: "🥩 Carnes y Proteínas",
@@ -85,24 +97,21 @@
       },
       verduras: {
         titulo: "🥦 Verduras y Frutas",
-        palabras: ["tomate", "cebolla", "zanahoria", "espinaca", "papa", "lechuga", "choclo", "zapallo", "zucchini", "pimiento", "morron", "morrón", "ajo", "palta", "limon", "limón", "manzana", "banana"]
+        palabras: ["tomate", "cebolla", "zanahoria", "espinaca", "papa", "lechuga", "choclo", "zapallo", "zucchini", "pimiento", "morron", "morrón", "ajo", "palta", "limon", "limón", "manzana", "banana", "fresa", "fresas", "platano", "plátano", "mango"]
       },
       almacen: {
         titulo: "🥫 Almacén y Condimentos",
-        palabras: ["aceite", "sal", "oregano", "orégano", "mayonesa", "salsa", "vinagre", "pimienta", "pimenton", "pimentón", "azucar", "azúcar", "agua"]
+        palabras: ["aceite", "sal", "oregano", "orégano", "mayonesa", "salsa", "vinagre", "pimienta", "pimenton", "pimentón", "azucar", "azúcar", "agua", "cacao", "canela", "frutos secos", "linaza", "semillas", "chia", "chía"]
       }
     };
 
-    // Función que extrae el ingrediente clave y elimina cantidades, paréntesis e insumos secundarios
     function limpiarIngrediente(textoBruto) {
       if (!textoBruto) return '';
       let t = textoBruto.toLowerCase();
 
-      // 1. Eliminar paréntesis y su contenido: ej. "(opcional)", "(o crema de preferencia)"
       t = t.replace(/\(.*?\)/g, '');
-
-      // 2. Eliminar números, fracciones y medidas comunes
       t = t.replace(/[0-9]+/g, '');
+      
       const palabrasRelleno = [
         'cucharadas', 'cucharada', 'cucharadita', 'cucharaditas', 'taza', 'tazas', 
         'gramos', 'gr', 'kilos', 'kg', 'ml', 'litro', 'litros', 'pizca', 'chorrito',
@@ -114,7 +123,6 @@
 
       let textoLimpio = palabras.join(' ').trim();
 
-      // 3. Unificación inteligente de variantes frecuentes
       if (textoLimpio.includes('avena')) return 'avena';
       if (textoLimpio.includes('yogur') || textoLimpio.includes('yogurt')) return 'yogur';
       if (textoLimpio.includes('pan')) return 'pan';
@@ -125,6 +133,8 @@
       if (textoLimpio.includes('fideo')) return 'fideo';
       if (textoLimpio.includes('tomate')) return 'tomate';
       if (textoLimpio.includes('cebolla')) return 'cebolla';
+      if (textoLimpio.includes('fresa')) return 'fresas';
+      if (textoLimpio.includes('platano') || textoLimpio.includes('plátano')) return 'plátano maduro';
 
       return textoLimpio;
     }
@@ -148,7 +158,6 @@
         recetasBase = datos.map(item => {
           const rawIngredientes = item.Ingredientes ? item.Ingredientes.split(',') : [];
           
-          // Procesar e Ingredientes limpios para filtrado
           const ingredientesLimpios = rawIngredientes
             .map(i => limpiarIngrediente(i))
             .filter(i => i.length > 0);
@@ -157,8 +166,8 @@
             id: item.ID || Math.random(),
             titulo: item.Titulo || "Sin Título",
             tiempo: item.Tiempo || "15 min",
-            ingredientesOriginales: rawIngredientes.map(i => i.trim()), // Mantiene la lista intacta para mostrar en la receta
-            ingredientes: Array.from(new Set(ingredientesLimpios)), // Lista simplificada para los botones
+            ingredientesOriginales: rawIngredientes.map(i => i.trim()),
+            ingredientes: Array.from(new Set(ingredientesLimpios)),
             pasos: item.Pasos ? item.Pasos.split('.').filter(p => p.trim() !== '') : []
           };
         });
@@ -192,11 +201,9 @@
       const contenedor = document.getElementById('contenedorCategorias');
       contenedor.innerHTML = '';
 
-      // Set garantiza que cada ingrediente aparezca una sola vez
       const listaIngredientesUnicos = new Set();
       recetasBase.forEach(r => r.ingredientes.forEach(i => listaIngredientesUnicos.add(i)));
 
-      // Agrupar ingredientes
       const grupos = {
         carnes: new Set(),
         cereales: new Set(),
@@ -210,7 +217,6 @@
         grupos[cat].add(ing);
       });
 
-      // Renderizar secciones desplegables
       for (const catKey in DICCIONARIO_CATEGORIAS) {
         const arrayIngredientes = Array.from(grupos[catKey]).sort();
         if (arrayIngredientes.length === 0) continue;
@@ -219,7 +225,7 @@
         const details = document.createElement('details');
         details.className = 'group border border-slate-200 rounded-xl bg-slate-50 overflow-hidden text-xs';
         
-        if (catKey === 'carnes' || catKey === 'verduras' || catKey === 'cereales') details.open = true;
+        if (catKey === 'carnes' || catKey === 'verduras' || catKey === 'cereales' || catKey === 'lacteos') details.open = true;
 
         details.innerHTML = `
           <summary class="cursor-pointer font-bold text-slate-700 p-3 bg-white flex justify-between items-center hover:bg-slate-50 transition select-none">
@@ -248,6 +254,22 @@
       }
     }
 
+    function cambiarModoFiltro(modo) {
+      modoFiltro = modo;
+      const btnFlex = document.getElementById('btnModoFlexible');
+      const btnEstr = document.getElementById('btnModoEstricto');
+
+      if (modo === 'flexible') {
+        btnFlex.className = 'flex-1 py-1.5 rounded-lg text-center transition bg-white text-amber-600 shadow-sm';
+        btnEstr.className = 'flex-1 py-1.5 rounded-lg text-center transition text-slate-500 hover:text-slate-700';
+      } else {
+        btnEstr.className = 'flex-1 py-1.5 rounded-lg text-center transition bg-white text-amber-600 shadow-sm';
+        btnFlex.className = 'flex-1 py-1.5 rounded-lg text-center transition text-slate-500 hover:text-slate-700';
+      }
+
+      filtrarYMostrarRecetas();
+    }
+
     function toggleIngrediente(ingrediente, boton) {
       if (ingredientesSeleccionados.has(ingrediente)) {
         ingredientesSeleccionados.delete(ingrediente);
@@ -265,16 +287,24 @@
 
       const filtradas = recetasBase.filter(receta => {
         if (ingredientesSeleccionados.size === 0) return true;
-        return Array.from(ingredientesSeleccionados).some(ing => receta.ingredientes.includes(ing));
+
+        if (modoFiltro === 'flexible') {
+          // Coincidencia parcial: Muestra si tiene AL MENOS UNO de los seleccionados
+          return Array.from(ingredientesSeleccionados).some(ing => receta.ingredientes.includes(ing));
+        } else {
+          // Modo Estricto: Todos los ingredientes de la receta DEBEN ESTAR en la lista seleccionada
+          return receta.ingredientes.every(ing => ingredientesSeleccionados.has(ing));
+        }
       });
 
       document.getElementById('contadorRecetas').textContent = filtradas.length;
 
       if (filtradas.length === 0) {
         lista.innerHTML = `
-          <div class="bg-white p-6 rounded-2xl text-center text-slate-400 text-xs">
-            <i class="fa-regular fa-face-frown text-2xl mb-2"></i>
-            <p>No encontramos recetas con los ingredientes seleccionados.</p>
+          <div class="bg-white p-6 rounded-2xl text-center text-slate-400 text-xs space-y-2">
+            <i class="fa-regular fa-face-frown text-2xl"></i>
+            <p>No encontramos recetas ${modoFiltro === 'estricto' ? 'que usen estrictamente solo esos ingredientes' : 'con esos ingredientes'}.</p>
+            ${modoFiltro === 'estricto' ? '<p class="text-[10px] text-amber-600">Tip: Prueba cambiar a "Coincidencia parcial" arriba.</p>' : ''}
           </div>
         `;
         return;
