@@ -22,12 +22,14 @@
 
     <main class="max-w-md mx-auto p-4 space-y-6">
 
-      <!-- Selector de Ingredientes -->
-      <section class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
-        <h2 class="font-bold text-slate-700 text-sm mb-3 flex items-center gap-2">
+      <!-- Selector de Ingredientes Agrupados por Categorías -->
+      <section class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 space-y-3">
+        <h2 class="font-bold text-slate-700 text-sm flex items-center gap-2">
           <i class="fa-solid fa-basket-shopping text-amber-500"></i> ¿Qué tenés en la heladera?
         </h2>
-        <div id="contenedorIngredientes" class="flex flex-wrap gap-2">
+        <p class="text-[11px] text-slate-400">Toca cada grupo para desplegar sus ingredientes:</p>
+
+        <div id="contenedorCategorias" class="space-y-2 pt-1">
           <span class="text-xs text-slate-400 italic">Cargando ingredientes...</span>
         </div>
       </section>
@@ -61,11 +63,35 @@
   </footer>
 
   <script>
-    // PEGA TU URL DE SHEETDB ENTRE LAS COMILLAS DE ABAJO:
+    // REEMPLAZA ESTA URL POR LA TUYA DE SHEETDB:
     const API_URL = 'https://sheetdb.io/api/v1/ur8nsa4jsgn3h'; 
 
     let recetasBase = [];
     let ingredientesSeleccionados = new Set();
+
+    // Diccionario de clasificación automática por palabras clave
+    const DICCIONARIO_CATEGORIAS = {
+      carnes: {
+        titulo: "🥩 Carnes y Proteínas",
+        palabras: ["pollo", "carne", "cerdo", "pescado", "huevo", "huevos", "atun", "atún", "jamon", "jamón", "salchicha", "carne picada", "milanesa"]
+      },
+      cereales: {
+        titulo: "🌾 Cereales y Harinas",
+        palabras: ["arroz", "fideos", "avena", "harina", "pan", "masa", "tarta", "empanda", "polenta", "galletitas", "fideo"]
+      },
+      lacteos: {
+        titulo: "🥛 Lácteos y Quesos",
+        palabras: ["leche", "queso", "yogur", "manteca", "crema", "mozzarella", "mancera", "ricotta"]
+      },
+      verduras: {
+        titulo: "🥦 Verduras y Frutas",
+        palabras: ["tomate", "cebolla", "zanahoria", "espinaca", "papa", "papas", "lechuga", "choclo", "zapallo", "zucchini", "pimiento", "morron", "morrón", "ajo", "palta", "limon", "limón", "manzana", "banana"]
+      },
+      almacen: {
+        titulo: "🥫 Almacén y Condimentos",
+        palabras: ["aceite", "sal", "oregano", "orégano", "mayonesa", "salsa", "vinagre", "pimienta", "pimenton", "pimentón", "azucar", "azúcar"]
+      }
+    };
 
     document.addEventListener('DOMContentLoaded', () => {
       cargarRecetasDesdeSheets();
@@ -83,7 +109,6 @@
         if (!respuesta.ok) throw new Error("Error en la respuesta de la API");
         const datos = await respuesta.json();
 
-        // Mapear los datos de las columnas de Google Sheets
         recetasBase = datos.map(item => ({
           id: item.ID || Math.random(),
           titulo: item.Titulo || "Sin Título",
@@ -92,7 +117,7 @@
           pasos: item.Pasos ? item.Pasos.split('.').filter(p => p.trim() !== '') : []
         }));
 
-        generarBotonesIngredientes();
+        generarCategoriasIngredientes();
         filtrarYMostrarRecetas();
 
       } catch (error) {
@@ -108,24 +133,73 @@
       }
     }
 
-    function generarBotonesIngredientes() {
-      const contenedor = document.getElementById('contenedorIngredientes');
+    function clasificarIngrediente(ingrediente) {
+      const ingLower = ingrediente.toLowerCase();
+      for (const key in DICCIONARIO_CATEGORIAS) {
+        if (DICCIONARIO_CATEGORIAS[key].palabras.some(palabra => ingLower.includes(palabra))) {
+          return key;
+        }
+      }
+      return 'almacen'; // Por defecto va a almacén si no se reconoce
+    }
+
+    function generarCategoriasIngredientes() {
+      const contenedor = document.getElementById('contenedorCategorias');
       contenedor.innerHTML = '';
 
       const listaIngredientes = new Set();
       recetasBase.forEach(r => r.ingredientes.forEach(i => listaIngredientes.add(i)));
 
+      // Agrupar ingredientes
+      const grupos = {
+        carnes: [],
+        cereales: [],
+        lacteos: [],
+        verduras: [],
+        almacen: []
+      };
+
       listaIngredientes.forEach(ing => {
-        const btn = document.createElement('button');
-        btn.textContent = ing;
-        btn.className = `px-3 py-1.5 rounded-full text-xs font-medium border transition ${
-          ingredientesSeleccionados.has(ing) 
-            ? 'bg-amber-500 text-white border-amber-500 shadow-sm' 
-            : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'
-        }`;
-        btn.onclick = () => toggleIngrediente(ing, btn);
-        contenedor.appendChild(btn);
+        const cat = clasificarIngrediente(ing);
+        grupos[cat].push(ing);
       });
+
+      // Renderizar secciones desplegables
+      for (const catKey in DICCIONARIO_CATEGORIAS) {
+        if (grupos[catKey].length === 0) continue; // Si no hay ingredientes de ese grupo, no se muestra
+
+        const catData = DICCIONARIO_CATEGORIAS[catKey];
+        const details = document.createElement('details');
+        details.className = 'group border border-slate-200 rounded-xl bg-slate-50 overflow-hidden text-xs';
+        
+        // Mantener abierto el primer grupo por defecto
+        if (catKey === 'carnes' || catKey === 'verduras') details.open = true;
+
+        details.innerHTML = `
+          <summary class="cursor-pointer font-bold text-slate-700 p-3 bg-white flex justify-between items-center hover:bg-slate-50 transition select-none">
+            <span>${catData.titulo} (${grupos[catKey].length})</span>
+            <i class="fa-solid fa-chevron-down text-slate-400 text-xs transition-transform group-open:rotate-180"></i>
+          </summary>
+          <div class="p-3 flex flex-wrap gap-2 border-t border-slate-100 bg-white" id="grupo-${catKey}">
+          </div>
+        `;
+
+        const divBotones = details.querySelector(`#grupo-${catKey}`);
+
+        grupos[catKey].forEach(ing => {
+          const btn = document.createElement('button');
+          btn.textContent = ing;
+          btn.className = `px-3 py-1.5 rounded-full text-xs font-medium border transition ${
+            ingredientesSeleccionados.has(ing) 
+              ? 'bg-amber-500 text-white border-amber-500 shadow-sm' 
+              : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'
+          }`;
+          btn.onclick = () => toggleIngrediente(ing, btn);
+          divBotones.appendChild(btn);
+        });
+
+        contenedor.appendChild(details);
+      }
     }
 
     function toggleIngrediente(ingrediente, boton) {
