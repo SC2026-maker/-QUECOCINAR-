@@ -73,15 +73,15 @@
     const DICCIONARIO_CATEGORIAS = {
       carnes: {
         titulo: "🥩 Carnes y Proteínas",
-        palabras: ["pollo", "carne", "cerdo", "pescado", "huevo", "huevos", "atun", "atún", "jamon", "jamón", "salchicha", "carne picada", "milanesa"]
+        palabras: ["pollo", "carne", "cerdo", "pescado", "huevo", "atun", "atún", "jamon", "jamón", "salchicha", "milanesa"]
       },
       cereales: {
         titulo: "🌾 Cereales y Harinas",
-        palabras: ["arroz", "fideos", "avena", "harina", "pan", "masa", "tarta", "empanda", "polenta", "galletitas", "fideo"]
+        palabras: ["arroz", "fideo", "fideos", "avena", "harina", "pan", "masa", "tarta", "empanada", "polenta", "galletita"]
       },
       lacteos: {
         titulo: "🥛 Lácteos y Quesos",
-        palabras: ["leche", "queso", "yogur", "manteca", "crema", "mozzarella", "mancera", "ricotta"]
+        palabras: ["leche", "queso", "yogur", "manteca", "crema", "mozzarella", "ricotta"]
       },
       verduras: {
         titulo: "🥦 Verduras y Frutas",
@@ -92,6 +92,32 @@
         palabras: ["aceite", "sal", "oregano", "orégano", "mayonesa", "salsa", "vinagre", "pimienta", "pimenton", "pimentón", "azucar", "azúcar"]
       }
     };
+
+    // Función para estandarizar nombres de ingredientes y evitar duplicados (ej: huevos -> huevo)
+    function normalizarIngrediente(ing) {
+      let texto = ing.toLowerCase().trim();
+      
+      // Mapeo directo de palabras frecuentes a singular / forma canónica
+      const mapaPlurales = {
+        'huevos': 'huevo',
+        'papas': 'papa',
+        'fideos': 'fideo',
+        'tomates': 'tomate',
+        'cebollas': 'cebolla',
+        'zanahorias': 'zanahoria',
+        'limones': 'limón',
+        'limon': 'limón',
+        'morrones': 'morrón',
+        'morron': 'morrón',
+        'oregano': 'orégano',
+        'azucar': 'azúcar',
+        'pimenton': 'pimentón',
+        'atun': 'atún',
+        'jamon': 'jamón'
+      };
+
+      return mapaPlurales[texto] || texto;
+    }
 
     document.addEventListener('DOMContentLoaded', () => {
       cargarRecetasDesdeSheets();
@@ -113,7 +139,9 @@
           id: item.ID || Math.random(),
           titulo: item.Titulo || "Sin Título",
           tiempo: item.Tiempo || "15 min",
-          ingredientes: item.Ingredientes ? item.Ingredientes.split(',').map(i => i.trim().toLowerCase()) : [],
+          ingredientes: item.Ingredientes 
+            ? item.Ingredientes.split(',').map(i => normalizarIngrediente(i)).filter(i => i.length > 0) 
+            : [],
           pasos: item.Pasos ? item.Pasos.split('.').filter(p => p.trim() !== '') : []
         }));
 
@@ -134,50 +162,50 @@
     }
 
     function clasificarIngrediente(ingrediente) {
-      const ingLower = ingrediente.toLowerCase();
       for (const key in DICCIONARIO_CATEGORIAS) {
-        if (DICCIONARIO_CATEGORIAS[key].palabras.some(palabra => ingLower.includes(palabra))) {
+        if (DICCIONARIO_CATEGORIAS[key].palabras.some(palabra => ingrediente.includes(palabra))) {
           return key;
         }
       }
-      return 'almacen'; // Por defecto va a almacén si no se reconoce
+      return 'almacen';
     }
 
     function generarCategoriasIngredientes() {
       const contenedor = document.getElementById('contenedorCategorias');
       contenedor.innerHTML = '';
 
-      const listaIngredientes = new Set();
-      recetasBase.forEach(r => r.ingredientes.forEach(i => listaIngredientes.add(i)));
+      // Set garantiza que cada ingrediente aparezca una sola vez
+      const listaIngredientesUnicos = new Set();
+      recetasBase.forEach(r => r.ingredientes.forEach(i => listaIngredientesUnicos.add(i)));
 
       // Agrupar ingredientes
       const grupos = {
-        carnes: [],
-        cereales: [],
-        lacteos: [],
-        verduras: [],
-        almacen: []
+        carnes: new Set(),
+        cereales: new Set(),
+        lacteos: new Set(),
+        verduras: new Set(),
+        almacen: new Set()
       };
 
-      listaIngredientes.forEach(ing => {
+      listaIngredientesUnicos.forEach(ing => {
         const cat = clasificarIngrediente(ing);
-        grupos[cat].push(ing);
+        grupos[cat].add(ing);
       });
 
       // Renderizar secciones desplegables
       for (const catKey in DICCIONARIO_CATEGORIAS) {
-        if (grupos[catKey].length === 0) continue; // Si no hay ingredientes de ese grupo, no se muestra
+        const arrayIngredientes = Array.from(grupos[catKey]).sort();
+        if (arrayIngredientes.length === 0) continue;
 
         const catData = DICCIONARIO_CATEGORIAS[catKey];
         const details = document.createElement('details');
         details.className = 'group border border-slate-200 rounded-xl bg-slate-50 overflow-hidden text-xs';
         
-        // Mantener abierto el primer grupo por defecto
         if (catKey === 'carnes' || catKey === 'verduras') details.open = true;
 
         details.innerHTML = `
           <summary class="cursor-pointer font-bold text-slate-700 p-3 bg-white flex justify-between items-center hover:bg-slate-50 transition select-none">
-            <span>${catData.titulo} (${grupos[catKey].length})</span>
+            <span>${catData.titulo} (${arrayIngredientes.length})</span>
             <i class="fa-solid fa-chevron-down text-slate-400 text-xs transition-transform group-open:rotate-180"></i>
           </summary>
           <div class="p-3 flex flex-wrap gap-2 border-t border-slate-100 bg-white" id="grupo-${catKey}">
@@ -186,7 +214,7 @@
 
         const divBotones = details.querySelector(`#grupo-${catKey}`);
 
-        grupos[catKey].forEach(ing => {
+        arrayIngredientes.forEach(ing => {
           const btn = document.createElement('button');
           btn.textContent = ing;
           btn.className = `px-3 py-1.5 rounded-full text-xs font-medium border transition ${
