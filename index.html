@@ -77,46 +77,56 @@
       },
       cereales: {
         titulo: "🌾 Cereales y Harinas",
-        palabras: ["arroz", "fideo", "fideos", "avena", "harina", "pan", "masa", "tarta", "empanada", "polenta", "galletita"]
+        palabras: ["arroz", "fideo", "avena", "harina", "pan", "masa", "tarta", "empanada", "polenta", "galletita", "mani", "maní"]
       },
       lacteos: {
         titulo: "🥛 Lácteos y Quesos",
-        palabras: ["leche", "queso", "yogur", "manteca", "crema", "mozzarella", "ricotta"]
+        palabras: ["leche", "queso", "yogur", "yogurt", "manteca", "crema", "mozzarella", "ricotta"]
       },
       verduras: {
         titulo: "🥦 Verduras y Frutas",
-        palabras: ["tomate", "cebolla", "zanahoria", "espinaca", "papa", "papas", "lechuga", "choclo", "zapallo", "zucchini", "pimiento", "morron", "morrón", "ajo", "palta", "limon", "limón", "manzana", "banana"]
+        palabras: ["tomate", "cebolla", "zanahoria", "espinaca", "papa", "lechuga", "choclo", "zapallo", "zucchini", "pimiento", "morron", "morrón", "ajo", "palta", "limon", "limón", "manzana", "banana"]
       },
       almacen: {
         titulo: "🥫 Almacén y Condimentos",
-        palabras: ["aceite", "sal", "oregano", "orégano", "mayonesa", "salsa", "vinagre", "pimienta", "pimenton", "pimentón", "azucar", "azúcar"]
+        palabras: ["aceite", "sal", "oregano", "orégano", "mayonesa", "salsa", "vinagre", "pimienta", "pimenton", "pimentón", "azucar", "azúcar", "agua"]
       }
     };
 
-    // Función para estandarizar nombres de ingredientes y evitar duplicados (ej: huevos -> huevo)
-    function normalizarIngrediente(ing) {
-      let texto = ing.toLowerCase().trim();
-      
-      // Mapeo directo de palabras frecuentes a singular / forma canónica
-      const mapaPlurales = {
-        'huevos': 'huevo',
-        'papas': 'papa',
-        'fideos': 'fideo',
-        'tomates': 'tomate',
-        'cebollas': 'cebolla',
-        'zanahorias': 'zanahoria',
-        'limones': 'limón',
-        'limon': 'limón',
-        'morrones': 'morrón',
-        'morron': 'morrón',
-        'oregano': 'orégano',
-        'azucar': 'azúcar',
-        'pimenton': 'pimentón',
-        'atun': 'atún',
-        'jamon': 'jamón'
-      };
+    // Función que extrae el ingrediente clave y elimina cantidades, paréntesis e insumos secundarios
+    function limpiarIngrediente(textoBruto) {
+      if (!textoBruto) return '';
+      let t = textoBruto.toLowerCase();
 
-      return mapaPlurales[texto] || texto;
+      // 1. Eliminar paréntesis y su contenido: ej. "(opcional)", "(o crema de preferencia)"
+      t = t.replace(/\(.*?\)/g, '');
+
+      // 2. Eliminar números, fracciones y medidas comunes
+      t = t.replace(/[0-9]+/g, '');
+      const palabrasRelleno = [
+        'cucharadas', 'cucharada', 'cucharadita', 'cucharaditas', 'taza', 'tazas', 
+        'gramos', 'gr', 'kilos', 'kg', 'ml', 'litro', 'litros', 'pizca', 'chorrito',
+        'de', 'del', 'la', 'los', 'las', 'un', 'una', 'o', 'preferencia'
+      ];
+
+      let palabras = t.split(/\s+/).filter(p => p.trim().length > 0);
+      palabras = palabras.filter(p => !palabrasRelleno.includes(p));
+
+      let textoLimpio = palabras.join(' ').trim();
+
+      // 3. Unificación inteligente de variantes frecuentes
+      if (textoLimpio.includes('avena')) return 'avena';
+      if (textoLimpio.includes('yogur') || textoLimpio.includes('yogurt')) return 'yogur';
+      if (textoLimpio.includes('pan')) return 'pan';
+      if (textoLimpio.includes('crema mani') || textoLimpio.includes('crema de mani')) return 'crema de maní';
+      if (textoLimpio.includes('leche')) return 'leche';
+      if (textoLimpio.includes('huevo')) return 'huevo';
+      if (textoLimpio.includes('papa')) return 'papa';
+      if (textoLimpio.includes('fideo')) return 'fideo';
+      if (textoLimpio.includes('tomate')) return 'tomate';
+      if (textoLimpio.includes('cebolla')) return 'cebolla';
+
+      return textoLimpio;
     }
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -135,15 +145,23 @@
         if (!respuesta.ok) throw new Error("Error en la respuesta de la API");
         const datos = await respuesta.json();
 
-        recetasBase = datos.map(item => ({
-          id: item.ID || Math.random(),
-          titulo: item.Titulo || "Sin Título",
-          tiempo: item.Tiempo || "15 min",
-          ingredientes: item.Ingredientes 
-            ? item.Ingredientes.split(',').map(i => normalizarIngrediente(i)).filter(i => i.length > 0) 
-            : [],
-          pasos: item.Pasos ? item.Pasos.split('.').filter(p => p.trim() !== '') : []
-        }));
+        recetasBase = datos.map(item => {
+          const rawIngredientes = item.Ingredientes ? item.Ingredientes.split(',') : [];
+          
+          // Procesar e Ingredientes limpios para filtrado
+          const ingredientesLimpios = rawIngredientes
+            .map(i => limpiarIngrediente(i))
+            .filter(i => i.length > 0);
+
+          return {
+            id: item.ID || Math.random(),
+            titulo: item.Titulo || "Sin Título",
+            tiempo: item.Tiempo || "15 min",
+            ingredientesOriginales: rawIngredientes.map(i => i.trim()), // Mantiene la lista intacta para mostrar en la receta
+            ingredientes: Array.from(new Set(ingredientesLimpios)), // Lista simplificada para los botones
+            pasos: item.Pasos ? item.Pasos.split('.').filter(p => p.trim() !== '') : []
+          };
+        });
 
         generarCategoriasIngredientes();
         filtrarYMostrarRecetas();
@@ -201,7 +219,7 @@
         const details = document.createElement('details');
         details.className = 'group border border-slate-200 rounded-xl bg-slate-50 overflow-hidden text-xs';
         
-        if (catKey === 'carnes' || catKey === 'verduras') details.open = true;
+        if (catKey === 'carnes' || catKey === 'verduras' || catKey === 'cereales') details.open = true;
 
         details.innerHTML = `
           <summary class="cursor-pointer font-bold text-slate-700 p-3 bg-white flex justify-between items-center hover:bg-slate-50 transition select-none">
@@ -275,8 +293,8 @@
           </div>
           
           <div class="flex flex-wrap gap-1">
-            ${receta.ingredientes.map(i => `
-              <span class="text-[10px] px-2 py-0.5 rounded ${ingredientesSeleccionados.has(i) ? 'bg-amber-100 text-amber-800 font-bold' : 'bg-slate-100 text-slate-500'}">${i}</span>
+            ${receta.ingredientesOriginales.map(i => `
+              <span class="text-[10px] px-2 py-0.5 rounded bg-slate-100 text-slate-600">${i}</span>
             `).join('')}
           </div>
 
