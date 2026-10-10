@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recetario Flash - Google Sheets Edition</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800 pb-12">
+
+  <!-- Header -->
+  <header class="bg-amber-500 text-white p-4 shadow-md sticky top-0 z-10">
+    <div class="max-w-md mx-auto flex justify-between items-center">
+      <h1 class="text-xl font-bold flex items-center gap-2">
+        <i class="fa-solid fa-bolt"></i> Recetario Flash
+      </h1>
+      <span class="text-xs bg-amber-600 px-2 py-1 rounded-full text-amber-100 font-medium">Google Sheets Connected</span>
+    </div>
+  </header>
+
+  <main class="max-w-md mx-auto p-4 space-y-6">
+
+    <!-- Configuración rápida de la API (Para pruebas) -->
+    <section class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-900">
+      <p class="font-bold mb-1"><i class="fa-solid fa-key"></i> Enlace de tu API (SheetDB / Sheet.best):</p>
+      <input type="text" id="apiUrlInput" placeholder="Pega tu URL de SheetDB aquí" 
+             class="w-full p-2 border border-amber-300 rounded bg-white text-slate-700 text-xs mb-2">
+      <button onclick="guardarYConectarAPI()" class="bg-amber-600 text-white font-semibold py-1 px-3 rounded text-xs hover:bg-amber-700 transition">
+        Conectar Planilla
+      </button>
+    </section>
+
+    <!-- Selector de Ingredientes -->
+    <section class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+      <h2 class="font-bold text-slate-700 text-sm mb-3 flex items-center gap-2">
+        <i class="fa-solid fa-basket-shopping text-amber-500"></i> ¿Qué tenés en la heladera?
+      </h2>
+      <div id="contenedorIngredientes" class="flex flex-wrap gap-2">
+        <!-- Se generan automáticamente según las recetas disponibles en la planilla -->
+        <span class="text-xs text-slate-400 italic">Cargando ingredientes...</span>
+      </div>
+    </section>
+
+    <!-- Estado de Carga / Recetas Sugeridas -->
+    <section class="space-y-4">
+      <div class="flex justify-between items-center">
+        <h2 class="font-bold text-slate-700 text-base">Recetas posibles</h2>
+        <span id="contadorRecetas" class="text-xs font-semibold bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">0</span>
+      </div>
+
+      <!-- Spinner / Indicador de Carga -->
+      <div id="loadingState" class="text-center py-8 hidden">
+        <i class="fa-solid fa-spinner fa-spin text-3xl text-amber-500 mb-2"></i>
+        <p class="text-sm text-slate-500">Buscando recetas en tu Google Sheet...</p>
+      </div>
+
+      <!-- Lista de Recetas -->
+      <div id="listaRecetas" class="space-y-3">
+        <!-- Las tarjetas de recetas se renderizan aquí -->
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // URL por defecto o guardada previamente en LocalStorage
+    let API_URL = localStorage.getItem('sheet_api_url') || '';
+    let recetasBase = [];
+    let ingredientesSeleccionados = new Set();
+
+    document.addEventListener('DOMContentLoaded', () => {
+      if (API_URL) {
+        document.getElementById('apiUrlInput').value = API_URL;
+        cargarRecetasDesdeSheets();
+      } else {
+        mostrarMensajeBienvenida();
+      }
+    });
+
+    function guardarYConectarAPI() {
+      const url = document.getElementById('apiUrlInput').value.trim();
+      if (!url) {
+        alert('Por favor ingresa una URL válida de la API de tu Google Sheet.');
+        return;
+      }
+      API_URL = url;
+      localStorage.setItem('sheet_api_url', url);
+      cargarRecetasDesdeSheets();
+    }
+
+    async function cargarRecetasDesdeSheets() {
+      const loading = document.getElementById('loadingState');
+      const lista = document.getElementById('listaRecetas');
+      
+      loading.classList.remove('hidden');
+      lista.innerHTML = '';
+
+      try {
+        const respuesta = await fetch(API_URL);
+        if (!respuesta.ok) throw new Error("Error en la respuesta de la API");
+        const datos = await respuesta.json();
+
+        // Mapear los datos de las columnas de Google Sheets
+        recetasBase = datos.map(item => ({
+          id: item.ID || Math.random(),
+          titulo: item.Titulo || "Sin Título",
+          tiempo: item.Tiempo || "15 min",
+          // Convierte "huevos, queso, tomate" en lista de minúsculas
+          ingredientes: item.Ingredientes ? item.Ingredientes.split(',').map(i => i.trim().toLowerCase()) : [],
+          pasos: item.Pasos ? item.Pasos.split('.').filter(p => p.trim() !== '') : []
+        }));
+
+        generarBotonesIngredientes();
+        filtrarYMostrarRecetas();
+
+      } catch (error) {
+        console.error("Error al cargar las recetas:", error);
+        lista.innerHTML = `
+          <div class="bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl text-xs text-center">
+            <i class="fa-solid fa-circle-exclamation text-xl mb-1"></i>
+            <p>No se pudieron cargar las recetas. Verifica que la URL sea válida y la planilla esté compartida correctamente.</p>
+          </div>
+        `;
+      } finally {
+        loading.classList.add('hidden');
+      }
+    }
+
+    function generarBotonesIngredientes() {
+      const contenedor = document.getElementById('contenedorIngredientes');
+      contenedor.innerHTML = '';
+
+      // Extraer todos los ingredientes únicos disponibles en las recetas
+      const listaIngredientes = new Set();
+      recetasBase.forEach(r => r.ingredientes.forEach(i => listaIngredientes.add(i)));
+
+      listaIngredientes.forEach(ing => {
+        const btn = document.createElement('button');
+        btn.textContent = ing;
+        btn.className = `px-3 py-1.5 rounded-full text-xs font-medium border transition ${
+          ingredientesSeleccionados.has(ing) 
+            ? 'bg-amber-500 text-white border-amber-500 shadow-sm' 
+            : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'
+        }`;
+        btn.onclick = () => toggleIngrediente(ing, btn);
+        contenedor.appendChild(btn);
+      });
+    }
+
+    function toggleIngrediente(ingrediente, boton) {
+      if (ingredientesSeleccionados.has(ingrediente)) {
+        ingredientesSeleccionados.delete(ingrediente);
+        boton.className = 'px-3 py-1.5 rounded-full text-xs font-medium border bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200';
+      } else {
+        ingredientesSeleccionados.add(ingrediente);
+        boton.className = 'px-3 py-1.5 rounded-full text-xs font-medium border bg-amber-500 text-white border-amber-500 shadow-sm';
+      }
+      filtrarYMostrarRecetas();
+    }
+
+    function filtrarYMostrarRecetas() {
+      const lista = document.getElementById('listaRecetas');
+      lista.innerHTML = '';
+
+      const filtradas = recetasBase.filter(receta => {
+        if (ingredientesSeleccionados.size === 0) return true;
+        // La receta debe incluir AL MENOS uno de los ingredientes seleccionados
+        return Array.from(ingredientesSeleccionados).some(ing => receta.ingredientes.includes(ing));
+      });
+
+      document.getElementById('contadorRecetas').textContent = filtradas.length;
+
+      if (filtradas.length === 0) {
+        lista.innerHTML = `
+          <div class="bg-white p-6 rounded-2xl text-center text-slate-400 text-xs">
+            <i class="fa-regular fa-face-frown text-2xl mb-2"></i>
+            <p>No encontramos recetas con los ingredientes seleccionados.</p>
+          </div>
+        `;
+        return;
+      }
+
+      filtradas.forEach(receta => {
+        const tarjeta = document.createElement('div');
+        tarjeta.className = 'bg-white rounded-2xl p-4 shadow-sm border border-slate-100 space-y-3';
+        
+        tarjeta.innerHTML = `
+          <div class="flex justify-between items-start">
+            <h3 class="font-bold text-slate-800 text-sm">${receta.titulo}</h3>
+            <span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded flex items-center gap-1 font-medium">
+              <i class="fa-regular fa-clock text-amber-500"></i> ${receta.tiempo}
+            </span>
+          </div>
+          
+          <div class="flex flex-wrap gap-1">
+            ${receta.ingredientes.map(i => `
+              <span class="text-[10px] px-2 py-0.5 rounded ${                 ingredientesSeleccionados.has(i) ? 'bg-amber-100 text-amber-800 font-bold' : 'bg-slate-100 text-slate-500'               }">${i}</span>
+            `).join('')}
+          </div>
+
+          <details class="text-xs text-slate-600 border-t pt-2 border-slate-100">
+            <summary class="cursor-pointer font-semibold text-amber-600 hover:underline">Ver preparación</summary>
+            <ol class="list-decimal list-inside space-y-1 mt-2 pl-1">
+              ${receta.pasos.map(p => `<li>${p.trim()}</li>`).join('')}
+            </ol>
+          </details>
+        `;
+        lista.appendChild(tarjeta);
+      });
+    }
+
+    function mostrarMensajeBienvenida() {
+      const lista = document.getElementById('listaRecetas');
+      lista.innerHTML = `
+        <div class="bg-white p-6 rounded-2xl text-center border border-slate-100 space-y-2">
+          <i class="fa-solid fa-table-cells text-3xl text-amber-500"></i>
+          <h3 class="font-bold text-slate-700 text-sm">Conectá tu Google Sheet</h3>
+          <p class="text-xs text-slate-500">Pega la URL de tu API arriba para cargar automáticamente las recetas desde tu planilla de cálculo.</p>
+        </div>
+      `;
+    }
+  </script>
+</body>
+</html>
