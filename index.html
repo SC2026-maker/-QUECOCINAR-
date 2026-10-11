@@ -43,10 +43,10 @@
       
       <div class="flex justify-between items-center">
         <div>
-          <h2 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+          <h2 class="font-bold text-slate-700 text-sm flex items-center gap-2">
             <i class="fa-solid fa-basket-shopping text-amber-500"></i> ¿Qué tenés en la heladera?
           </h2>
-          <p class="text-[11px] text-slate-400 mt-0.5">Seleccioná los ingredientes disponibles:</p>
+          <p class="text-[11px] text-slate-400 mt-0.5">Seleccioná los ingredientes o escribilos:</p>
         </div>
         <!-- Botón Limpiar -->
         <button id="btnLimpiar" onclick="limpiarSeleccion()" class="hidden text-xs text-amber-600 hover:text-amber-800 font-semibold flex items-center gap-1.5 bg-amber-50 hover:bg-amber-100 px-3 py-1.5 rounded-xl transition border border-amber-200/50">
@@ -57,7 +57,7 @@
       <!-- Buscador Rápido de Ingredientes -->
       <div class="relative">
         <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-        <input type="text" id="inputBuscarIngrediente" onkeyup="filtrarBotonesIngredientes()" placeholder="Buscar ingrediente (ej. pollo, huevo)..." class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:bg-white transition">
+        <input type="text" id="inputBuscarIngrediente" onkeyup="alEscribirBuscador()" placeholder="Escribí ingredientes (ej. atun, pasta)..." class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:bg-white transition">
       </div>
 
       <!-- Selector de Modo de Filtro -->
@@ -369,18 +369,22 @@
       }
     }
 
-    function filtrarBotonesIngredientes() {
+    function alEscribirBuscador() {
       const filtro = document.getElementById('inputBuscarIngrediente').value.toLowerCase().trim();
+      
+      // Filtrar botones desplegables
       const botones = document.querySelectorAll('.btn-ingrediente');
-
       botones.forEach(btn => {
         const texto = btn.textContent.toLowerCase();
-        if (texto.includes(filtro)) {
+        if (!filtro || texto.includes(filtro)) {
           btn.style.display = 'inline-block';
         } else {
           btn.style.display = 'none';
         }
       });
+
+      actualizarEstadoBotonLimpiar();
+      filtrarYMostrarRecetas();
     }
 
     function cambiarModoFiltro(modo) {
@@ -417,7 +421,9 @@
 
     function actualizarEstadoBotonLimpiar() {
       const btnLimpiar = document.getElementById('btnLimpiar');
-      if (ingredientesSeleccionados.size > 0) {
+      const textoBuscador = document.getElementById('inputBuscarIngrediente').value.trim();
+      
+      if (ingredientesSeleccionados.size > 0 || textoBuscador.length > 0) {
         btnLimpiar.classList.remove('hidden');
       } else {
         btnLimpiar.classList.add('hidden');
@@ -427,9 +433,10 @@
     function limpiarSeleccion() {
       ingredientesSeleccionados.clear();
       document.getElementById('inputBuscarIngrediente').value = '';
-      filtrarBotonesIngredientes();
       
-      document.querySelectorAll('#contenedorCategorias button').forEach(btn => {
+      const botones = document.querySelectorAll('.btn-ingrediente');
+      botones.forEach(btn => {
+        btn.style.display = 'inline-block';
         btn.className = 'btn-ingrediente px-3 py-1.5 rounded-full text-xs font-medium border bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200';
       });
 
@@ -437,21 +444,34 @@
       filtrarYMostrarRecetas();
     }
 
+    function obtenerIngredientesActivos() {
+      const listaFinal = new Set(ingredientesSeleccionados);
+      const textoBuscador = document.getElementById('inputBuscarIngrediente').value.toLowerCase().trim();
+      
+      if (textoBuscador.length > 0) {
+        const partes = textoBuscador.split(',').map(p => p.trim()).filter(p => p.length > 0);
+        partes.forEach(p => listaFinal.add(p));
+      }
+      return Array.from(listaFinal);
+    }
+
     function filtrarYMostrarRecetas() {
       const lista = document.getElementById('listaRecetas');
       lista.innerHTML = '';
 
+      const ingredientesActivos = obtenerIngredientesActivos();
+
       const filtradas = recetasBase.filter(receta => {
-        if (ingredientesSeleccionados.size === 0) return true;
+        if (ingredientesActivos.length === 0) return true;
 
         if (modoFiltro === 'flexible') {
-          return Array.from(ingredientesSeleccionados).some(ing => receta.ingredientes.includes(ing));
+          return ingredientesActivos.some(ing => 
+            receta.ingredientes.some(ingReceta => ingReceta.includes(ing) || ing.includes(ingReceta))
+          );
         } else {
-          return Array.from(ingredientesSeleccionados).every(ingSeleccionado => {
-            return receta.ingredientes.some(ingReceta => {
-              return ingReceta.includes(ingSeleccionado) || ingSeleccionado.includes(ingReceta);
-            });
-          });
+          return ingredientesActivos.every(ingSeleccionado => 
+            receta.ingredientes.some(ingReceta => ingReceta.includes(ingSeleccionado) || ingSeleccionado.includes(ingReceta))
+          );
         }
       });
 
@@ -488,7 +508,6 @@
           </div>
         ` : '';
 
-        // Desglosar pasos para checklist interactivo
         const listaPasos = receta.pasos.split('\n').filter(p => p.trim().length > 0);
 
         tarjeta.innerHTML = `
