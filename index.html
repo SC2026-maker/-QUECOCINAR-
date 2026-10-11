@@ -88,7 +88,6 @@
     let ingredientesSeleccionados = new Set();
     let modoFiltro = 'flexible';
 
-    // DICCIONARIO DE CATEGORÍAS
     const DICCIONARIO_CATEGORIAS = {
       carnes: {
         titulo: "🥩 Carnes y Proteínas",
@@ -383,8 +382,8 @@
         if (modoFiltro === 'flexible') {
           return Array.from(ingredientesSeleccionados).some(ing => receta.ingredientes.includes(ing));
         } else {
-          // MODO ESTRICTO BASADO EN PROTEÍNAS:
-          // Identificar si el usuario seleccionó alguna proteína (perteneciente a "Carnes y Proteínas")
+          // MODO ESTRICTO INTELIGENTE DE PROTEÍNAS:
+          // 1. Identificar si el usuario seleccionó alguna proteína (Carnes/Proteínas o Lácteos)
           const proteinasSeleccionadas = Array.from(ingredientesSeleccionados).filter(ing => 
             DICCIONARIO_CATEGORIAS.carnes.palabras.some(p => ing.toLowerCase().includes(p)) ||
             DICCIONARIO_CATEGORIAS.lacteos.palabras.some(p => ing.toLowerCase().includes(p))
@@ -396,8 +395,13 @@
             if (!tieneProteina) return false;
           }
 
-          // Además, la receta solo debe usar ingredientes que el usuario tenga seleccionados
-          return receta.ingredientes.every(ing => ingredientesSeleccionados.has(ing));
+          // 2. Para los demás ingredientes (verduras, condimentos, aceites), 
+          // permitimos que la receta use únicamente los ingredientes que el usuario seleccionó 
+          // O ingredientes básicos de almacén que se asumen estándar (agua, sal, aceite).
+          const ingredientesBasicos = ['agua', 'sal', 'aceite de oliva'];
+          return receta.ingredientes.every(ing => 
+            ingredientesSeleccionados.has(ing) || ingredientesBasicos.includes(ing)
+          );
         }
       });
 
@@ -407,7 +411,7 @@
         lista.innerHTML = `
           <div class="bg-white p-6 rounded-2xl text-center text-slate-400 text-xs space-y-2">
             <i class="fa-regular fa-face-frown text-2xl"></i>
-            <p>No encontramos recetas ${modoFiltro === 'estricto' ? 'con esa combinación estricta de proteínas' : 'con esos ingredientes'}.</p>
+            <p>No encontramos recetas con esa combinación exacta.</p>
           </div>
         `;
         return;
