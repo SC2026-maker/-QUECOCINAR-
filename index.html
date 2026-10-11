@@ -382,26 +382,29 @@
         if (modoFiltro === 'flexible') {
           return Array.from(ingredientesSeleccionados).some(ing => receta.ingredientes.includes(ing));
         } else {
-          // MODO ESTRICTO INTELIGENTE DE PROTEÍNAS:
-          // 1. Identificar si el usuario seleccionó alguna proteína (Carnes/Proteínas o Lácteos)
-          const proteinasSeleccionadas = Array.from(ingredientesSeleccionados).filter(ing => 
+          // MODO ESTRICTO BASADO EN PROTEÍNAS
+          const arraySeleccionados = Array.from(ingredientesSeleccionados);
+
+          // Identificar si el usuario seleccionó proteínas o lácteos
+          const proteinasSeleccionadas = arraySeleccionados.filter(ing => 
             DICCIONARIO_CATEGORIAS.carnes.palabras.some(p => ing.toLowerCase().includes(p)) ||
             DICCIONARIO_CATEGORIAS.lacteos.palabras.some(p => ing.toLowerCase().includes(p))
           );
 
-          // Si seleccionó proteínas, la receta DEBE contener al menos una de esas proteínas
+          // Si hay proteínas seleccionadas, la receta OBLIGATORIAMENTE debe incluir al menos una
           if (proteinasSeleccionadas.length > 0) {
             const tieneProteina = proteinasSeleccionadas.some(prot => receta.ingredientes.includes(prot));
             if (!tieneProteina) return false;
           }
 
-          // 2. Para los demás ingredientes (verduras, condimentos, aceites), 
-          // permitimos que la receta use únicamente los ingredientes que el usuario seleccionó 
-          // O ingredientes básicos de almacén que se asumen estándar (agua, sal, aceite).
-          const ingredientesBasicos = ['agua', 'sal', 'aceite de oliva'];
-          return receta.ingredientes.every(ing => 
-            ingredientesSeleccionados.has(ing) || ingredientesBasicos.includes(ing)
-          );
+          // Si además seleccionó otros ingredientes (no proteínas), la receta debe contenerlos todos
+          const otrosSeleccionados = arraySeleccionados.filter(ing => !proteinasSeleccionadas.includes(ing));
+          if (otrosSeleccionados.length > 0) {
+            const tieneTodosOtros = otrosSeleccionados.every(ing => receta.ingredientes.includes(ing));
+            if (!tieneTodosOtros) return false;
+          }
+
+          return true;
         }
       });
 
