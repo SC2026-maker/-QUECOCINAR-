@@ -88,28 +88,38 @@
     let ingredientesSeleccionados = new Set();
     let modoFiltro = 'flexible';
 
-    // DICCIONARIO MEJORADO Y AMPLIADO DE CATEGORÍAS
+    // DICCIONARIO ESTRUCTURADO Y COMPLETO
     const DICCIONARIO_CATEGORIAS = {
       carnes: {
         titulo: "🥩 Carnes y Proteínas",
-        palabras: ["pollo", "carne", "cerdo", "pescado", "huevo", "atun", "atún", "jamon", "jamón", "salchicha", "milanesa"]
-      },
-      cereales: {
-        titulo: "🌾 Cereales y Harinas",
-        palabras: ["arroz", "fideo", "fideos", "avena", "harina", "pan", "masa", "tarta", "empanada", "polenta", "galletita", "mani", "maní", "crema de maní", "tostadas integrales", "tortilla integral", "pasta"]
+        palabras: ["pollo", "carne", "cerdo", "pescado", "huevo", "huevos", "atun", "atún", "jamon", "jamón", "salchicha", "milanesa"]
       },
       lacteos: {
         titulo: "🥛 Lácteos y Quesos",
         palabras: ["leche", "queso", "yogur", "yogurt", "manteca", "crema", "mozzarella", "ricota", "ricotta", "requeson", "requesón", "queso fresco"]
       },
       verduras: {
-        titulo: "🥦 Verduras y Frutas",
+        titulo: "🥦 Verduras y Hortalizas",
         palabras: [
-          "tomate", "cebolla", "zanahoria", "espinaca", "papa", "lechuga", "choclo", "zapallo", "zucchini", "pimiento", 
-          "morron", "morrón", "ajo", "palta", "aguacate", "limon", "limón", "manzana", "banana", "fresa", "fresas", "platano", 
-          "plátano", "mango", "piña", "pina", "durazno", "pera", "frambuesa", "frambuesas", "uva", "uvas", "frutos rojos", 
-          "arandanos", "arándanos", "datil", "dátiles", "datiles", "frutas", "kiwi", "ciruela", "sandia", "sandía", "melon", "melón",
-          "brócoli", "brocoli", "chícharos", "chicharos", "apio", "pepino", "vegetales", "verduras"
+          "pepino", "lechuga", "tomate", "cebolla", "zanahoria", "espinaca", "papa", "brócoli", "brocoli", 
+          "choclo", "zapallo", "zucchini", "pimiento", "morron", "morrón", "ajo", "apio", "chícharos", "chicharos", 
+          "palta", "aguacate", "vegetales", "verduras"
+        ]
+      },
+      frutas: {
+        titulo: "🍎 Frutas",
+        palabras: [
+          "manzana", "banana", "platano", "plátano", "fresa", "fresas", "frutilla", "frutillas", "mango", "piña", "pina", 
+          "durazno", "pera", "frambuesa", "frambuesas", "uva", "uvas", "frutos rojos", "arandanos", "arándanos", 
+          "datil", "dátiles", "datiles", "kiwi", "ciruela", "sandia", "sandía", "melon", "melón", "papaya", "limon", "limón", "fruta", "frutas"
+        ]
+      },
+      cereales: {
+        titulo: "🌾 Cereales, Harinas y Legumbres",
+        palabras: [
+          "arroz", "fideo", "fideos", "pasta", "avena", "harina", "pan", "tostadas", "tortilla", "masa", "tarta", 
+          "empanada", "polenta", "galletita", "mani", "maní", "crema de maní", "lenteja", "lentejas", "garbanzo", "garbanzos", 
+          "frijol", "frijoles", "poroto", "porotos"
         ]
       },
       almacen: {
@@ -117,10 +127,86 @@
         palabras: [
           "aceite", "sal", "oregano", "orégano", "mayonesa", "salsa", "vinagre", "pimienta", "pimenton", "pimentón", 
           "azucar", "azúcar", "agua", "cacao", "canela", "frutos secos", "linaza", "semilla", "semillas", "chia", "chía", 
-          "miel", "albahaca", "perejil", "laurel", "comino", "mostaza", "caldo", "frijol", "frijoles", "lenteja", "lentejas", 
-          "garbanzo", "garbanzos", "arandanos secos"
+          "miel", "albahaca", "perejil", "laurel", "comino", "mostaza", "caldo"
         ]
       }
+    };
+
+    // TABLA DE MAPEO DIRECTO DE CANONIZACIÓN
+    const MAPEO_CANONICO = {
+      'pepino': 'pepino',
+      'lechuga': 'lechuga',
+      'tomate': 'tomate',
+      'cebolla': 'cebolla',
+      'zanahoria': 'zanahoria',
+      'espinaca': 'espinaca',
+      'papa': 'papa',
+      'brocoli': 'brócoli',
+      'brócoli': 'brócoli',
+      'aguacate': 'aguacate',
+      'palta': 'aguacate',
+      'apio': 'apio',
+      'pimiento': 'pimiento',
+      'morron': 'pimiento',
+      'morrón': 'pimiento',
+      'ajo': 'ajo',
+      'chicharos': 'chícharos',
+      'chícharos': 'chícharos',
+      'fresa': 'fresas',
+      'fresas': 'fresas',
+      'frutilla': 'fresas',
+      'frutillas': 'fresas',
+      'platano': 'plátano',
+      'plátano': 'plátano',
+      'banana': 'plátano',
+      'manzana': 'manzana',
+      'pera': 'pera',
+      'mango': 'mango',
+      'piña': 'piña',
+      'pina': 'piña',
+      'durazno': 'durazno',
+      'frambuesa': 'frambuesas',
+      'frambuesas': 'frambuesas',
+      'uva': 'uvas',
+      'uvas': 'uvas',
+      'frutos rojos': 'frutos rojos',
+      'arandano': 'arándanos',
+      'arándano': 'arándanos',
+      'arandanos': 'arándanos',
+      'arándanos': 'arándanos',
+      'datil': 'dátiles',
+      'dátil': 'dátiles',
+      'datiles': 'dátiles',
+      'dátiles': 'dátiles',
+      'ricota': 'ricota',
+      'ricotta': 'ricota',
+      'queso fresco': 'queso fresco',
+      'yogur': 'yogur',
+      'yogurt': 'yogur',
+      'leche': 'leche',
+      'huevo': 'huevo',
+      'huevos': 'huevo',
+      'pollo': 'pollo',
+      'atun': 'atún',
+      'atún': 'atún',
+      'avena': 'avena',
+      'arroz': 'arroz',
+      'pan': 'pan integral',
+      'tostadas': 'tostadas integrales',
+      'tortilla': 'tortilla integral',
+      'lenteja': 'lentejas',
+      'lentejas': 'lentejas',
+      'garbanzo': 'garbanzos',
+      'garbanzos': 'garbanzos',
+      'frijol': 'frijoles',
+      'frijoles': 'frijoles',
+      'albahaca': 'albahaca',
+      'aceite': 'aceite de oliva',
+      'canela': 'canela',
+      'cacao': 'cacao puro',
+      'chia': 'chía',
+      'chía': 'chía',
+      'miel': 'miel'
     };
 
     function obtenerCampo(item, clave) {
@@ -132,57 +218,46 @@
       return "";
     }
 
-    function limpiarIngrediente(textoBruto) {
-      if (!textoBruto) return '';
-      let t = String(textoBruto).toLowerCase().trim();
-
-      t = t.replace(/\(.*?\)/g, '');
-      t = t.replace(/[0-9]+/g, '');
+    // Normalizador e higienizador de ingredientes que desglosa combinaciones pegadas
+    function procesarListaIngredientes(textoBruto) {
+      if (!textoBruto) return [];
       
-      const palabrasRelleno = [
-        'cucharadas', 'cucharada', 'cucharadita', 'cucharaditas', 'taza', 'tazas', 
-        'gramos', 'gr', 'kilos', 'kg', 'ml', 'litro', 'litros', 'pizca', 'chorrito',
-        'de', 'del', 'la', 'los', 'las', 'un', 'una', 'o', 'preferencia', 'secos', 'variadas'
-      ];
+      // Separar primero por comas
+      let fragmentos = String(textoBruto).split(',');
+      let resultadoLimpiado = [];
 
-      let palabras = t.split(/\s+/).filter(p => p.trim().length > 0);
-      palabras = palabras.filter(p => !palabrasRelleno.includes(p));
+      fragmentos.forEach(frag => {
+        let t = frag.toLowerCase().trim();
+        t = t.replace(/\(.*?\)/g, ''); // Quitar paréntesis
+        t = t.replace(/[0-9]+/g, ''); // Quitar números
 
-      let textoLimpio = palabras.join(' ').trim();
+        const palabrasRelleno = [
+          'cucharadas', 'cucharada', 'cucharadita', 'cucharaditas', 'taza', 'tazas', 
+          'gramos', 'gr', 'kilos', 'kg', 'ml', 'litro', 'litros', 'pizca', 'chorrito',
+          'de', 'del', 'la', 'los', 'las', 'un', 'una', 'o', 'preferencia', 'secos', 'variadas', 'cocidos', 'cocido', 'molidos', 'deshebrado', 'fresco', 'maduro'
+        ];
 
-      // Limpieza de palabras compuestas pegadas o variantes
-      if (textoLimpio.includes('avena')) return 'avena';
-      if (textoLimpio.includes('yogur') || textoLimpio.includes('yogurt')) return 'yogur';
-      if (textoLimpio.includes('pan')) return 'pan';
-      if (textoLimpio.includes('crema mani') || textoLimpio.includes('crema de mani')) return 'crema de maní';
-      if (textoLimpio.includes('leche')) return 'leche';
-      if (textoLimpio.includes('huevo')) return 'huevo';
-      if (textoLimpio.includes('papa')) return 'papa';
-      if (textoLimpio.includes('fideo')) return 'fideo';
-      if (textoLimpio.includes('tomate')) return 'tomate';
-      if (textoLimpio.includes('cebolla')) return 'cebolla';
-      if (textoLimpio.includes('fresa')) return 'fresas';
-      if (textoLimpio.includes('platano') || textoLimpio.includes('plátano')) return 'plátano maduro';
-      if (textoLimpio.includes('piña') || textoLimpio.includes('pina')) return 'piña';
-      if (textoLimpio.includes('durazno')) return 'durazno';
-      if (textoLimpio.includes('pera')) return 'pera';
-      if (textoLimpio.includes('frambuesa')) return 'frambuesas';
-      if (textoLimpio.includes('uva')) return 'uvas';
-      if (textoLimpio.includes('frutos rojos')) return 'frutos rojos';
-      if (textoLimpio.includes('arandano') || textoLimpio.includes('arándano')) return 'arándanos';
-      if (textoLimpio.includes('datil') || textoLimpio.includes('dátil')) return 'dátiles';
-      if (textoLimpio.includes('ricota') || textoLimpio.includes('ricotta')) return 'ricota';
-      if (textoLimpio.includes('aguacate') || textoLimpio.includes('palta')) return 'aguacate';
-      if (textoLimpio.includes('albahaca')) return 'albahaca';
-      if (textoLimpio.includes('apio')) return 'apio';
-      if (textoLimpio.includes('brócoli') || textoLimpio.includes('brocoli')) return 'brócoli';
-      if (textoLimpio.includes('pepino')) return 'pepino';
-      if (textoLimpio.includes('garbanzo')) return 'garbanzos';
-      if (textoLimpio.includes('lenteja')) return 'lentejas';
-      if (textoLimpio.includes('frijol')) return 'frijoles';
-      if (textoLimpio.includes('aceite oliva')) return 'aceite de oliva';
+        let palabras = t.split(/\s+/).filter(p => p.trim().length > 0 && !palabrasRelleno.includes(p));
 
-      return textoLimpio;
+        // Verificar si alguna palabra individual pertenece a nuestro mapa canónico
+        let hallados = [];
+        palabras.forEach(pal => {
+          if (MAPEO_CANONICO[pal]) {
+            hallados.push(MAPEO_CANONICO[pal]);
+          }
+        });
+
+        if (hallados.length > 0) {
+          resultadoLimpiado.push(...hallados);
+        } else {
+          let textoLimpio = palabras.join(' ').trim();
+          if (textoLimpio.length > 0) {
+            resultadoLimpiado.push(textoLimpio);
+          }
+        }
+      });
+
+      return Array.from(new Set(resultadoLimpiado));
     }
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -211,17 +286,14 @@
           .map(item => {
             const rawIngredientesStr = obtenerCampo(item, 'Ingredientes');
             const rawIngredientes = rawIngredientesStr ? String(rawIngredientesStr).split(',') : [];
-            
-            const ingredientesLimpios = rawIngredientes
-              .map(i => limpiarIngrediente(i))
-              .filter(i => i.length > 0);
+            const ingredientesLimpios = procesarListaIngredientes(rawIngredientesStr);
 
             return {
               id: obtenerCampo(item, 'ID') || Math.random(),
               titulo: obtenerCampo(item, 'Titulo') || "Sin Título",
               tiempo: obtenerCampo(item, 'Tiempo') || "15 min",
               ingredientesOriginales: rawIngredientes.map(i => String(i).trim()),
-              ingredientes: Array.from(new Set(ingredientesLimpios)),
+              ingredientes: ingredientesLimpios,
               pasos: String(obtenerCampo(item, 'Pasos')),
               consejos: String(obtenerCampo(item, 'Consejos')),
               foto: String(obtenerCampo(item, 'Foto'))
@@ -265,9 +337,10 @@
 
       const grupos = {
         carnes: new Set(),
-        cereales: new Set(),
         lacteos: new Set(),
         verduras: new Set(),
+        frutas: new Set(),
+        cereales: new Set(),
         almacen: new Set()
       };
 
@@ -284,7 +357,7 @@
         const details = document.createElement('details');
         details.className = 'group border border-slate-200 rounded-xl bg-slate-50 overflow-hidden text-xs';
         
-        if (catKey === 'carnes' || catKey === 'verduras' || catKey === 'cereales' || catKey === 'lacteos') details.open = true;
+        if (catKey === 'carnes' || catKey === 'verduras' || catKey === 'frutas' || catKey === 'lacteos' || catKey === 'cereales') details.open = true;
 
         details.innerHTML = `
           <summary class="cursor-pointer font-bold text-slate-700 p-3 bg-white flex justify-between items-center hover:bg-slate-50 transition select-none">
