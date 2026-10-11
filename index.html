@@ -93,11 +93,6 @@
     let ingredientesSeleccionados = new Set();
     let modoFiltro = 'flexible';
 
-    // BÁSICOS INFALTABLES DE DESPENSA (No bloquean el modo estricto)
-    const BASICOS_DESPENSA = [
-      'agua', 'sal', 'aceite', 'aceite de oliva', 'pimienta', 'azúcar', 'azucar', 'orégano', 'oregano'
-    ];
-
     const DICCIONARIO_CATEGORIAS = {
       carnes: {
         titulo: "🥩 Carnes y Proteínas",
@@ -151,12 +146,13 @@
       'frambuesa': 'frambuesas', 'frambuesas': 'frambuesas', 'uva': 'uvas', 'uvas': 'uvas', 'frutos rojos': 'frutos rojos',
       'arandano': 'arándanos', 'arándano': 'arándanos', 'arandanos': 'arándanos', 'arándanos': 'arándanos',
       'datil': 'dátiles', 'dátil': 'dátiles', 'datiles': 'dátiles', 'dátiles': 'dátiles', 'ricota': 'ricota',
-      'ricotta': 'ricota', 'queso fresco': 'queso fresco', 'yogur': 'yogur', 'yogurt': 'yogur', 'leche': 'leche',
+      'ricotta': 'ricota', 'queso fresco': 'queso fresco', 'queso': 'queso', 'queso rallado': 'queso',
+      'yogur': 'yogur', 'yogurt': 'yogur', 'leche': 'leche',
       'huevo': 'huevo', 'huevos': 'huevo', 'pollo': 'pollo', 'atun': 'atún', 'atún': 'atún', 'avena': 'avena',
-      'arroz': 'arroz', 'pan': 'pan integral', 'tostadas': 'tostadas integrales', 'tortilla': 'tortilla integral',
-      'lenteja': 'lentejas', 'lentejas': 'lentejas', 'garbanzo': 'garbanzos', 'garbanzos': 'garbanzos',
-      'frijol': 'frijoles', 'frijoles': 'frijoles', 'albahaca': 'albahaca', 'aceite': 'aceite de oliva',
-      'canela': 'canela', 'cacao': 'cacao puro', 'chia': 'chía', 'chía': 'chía', 'miel': 'miel'
+      'arroz': 'arroz', 'pan': 'pan integral', 'pan integral': 'pan integral', 'tostadas': 'tostadas integrales', 
+      'tortilla': 'tortilla integral', 'lenteja': 'lentejas', 'lentejas': 'lentejas', 'garbanzo': 'garbanzos', 
+      'garbanzos': 'garbanzos', 'frijol': 'frijoles', 'frijoles': 'frijoles', 'albahaca': 'albahaca', 
+      'aceite': 'aceite de oliva', 'canela': 'canela', 'cacao': 'cacao puro', 'chia': 'chía', 'chía': 'chía', 'miel': 'miel'
     };
 
     function obtenerCampo(item, clave) {
@@ -181,7 +177,7 @@
         const palabrasRelleno = [
           'cucharadas', 'cucharada', 'cucharadita', 'cucharaditas', 'taza', 'tazas', 
           'gramos', 'gr', 'kilos', 'kg', 'ml', 'litro', 'litros', 'pizca', 'chorrito',
-          'de', 'del', 'la', 'los', 'las', 'un', 'una', 'o', 'preferencia', 'secos', 'variadas', 'cocidos', 'cocido', 'molidos', 'deshebrado', 'fresco', 'maduro'
+          'de', 'del', 'la', 'los', 'las', 'un', 'una', 'o', 'preferencia', 'secos', 'variadas', 'cocidos', 'cocido', 'molidos', 'deshebrado', 'fresco', 'maduro', 'rallado'
         ];
 
         let palabras = t.split(/\s+/).filter(p => p.trim().length > 0 && !palabrasRelleno.includes(p));
@@ -346,7 +342,7 @@
       } else {
         btnEstr.className = 'flex-1 py-1.5 rounded-lg text-center transition bg-white text-amber-600 shadow-sm';
         btnFlex.className = 'flex-1 py-1.5 rounded-lg text-center transition text-slate-500 hover:text-slate-700';
-        leyenda.innerHTML = `<i class="fa-solid fa-lock text-amber-500 mr-1"></i> Muestra recetas que podés preparar <strong>únicamente</strong> con tu selección (+ básicos).`;
+        leyenda.innerHTML = `<i class="fa-solid fa-lock text-amber-500 mr-1"></i> Muestra recetas que incluyan <strong>todos</strong> tus ingredientes seleccionados.`;
       }
 
       filtrarYMostrarRecetas();
@@ -393,14 +389,17 @@
         if (ingredientesSeleccionados.size === 0) return true;
 
         if (modoFiltro === 'flexible') {
-          // FLEXIBLE: Al menos 1 ingrediente de los seleccionados
+          // FLEXIBLE: Al menos 1 ingrediente coincidente
           return Array.from(ingredientesSeleccionados).some(ing => receta.ingredientes.includes(ing));
         } else {
-          // ESTRICTO / SOLO LO QUE TENGO:
-          // La receta NO debe requerir NINGÚN ingrediente fuera de la selección del usuario (excepto básicos de despensa)
-          return receta.ingredientes.every(ing => 
-            ingredientesSeleccionados.has(ing) || BASICOS_DESPENSA.includes(ing)
-          );
+          // MODO ESTRICTO (TODOS LOS SELECCIONADOS):
+          // La receta DEBE incluir TODOS los ingredientes que el usuario seleccionó.
+          // Mapea variaciones simples (ej. queso vs queso rallado)
+          return Array.from(ingredientesSeleccionados).every(ingSeleccionado => {
+            return receta.ingredientes.some(ingReceta => {
+              return ingReceta.includes(ingSeleccionado) || ingSeleccionado.includes(ingReceta);
+            });
+          });
         }
       });
 
@@ -411,7 +410,7 @@
           <div class="bg-white p-6 rounded-2xl text-center text-slate-400 text-xs space-y-2">
             <i class="fa-regular fa-face-frown text-2xl"></i>
             <p>${modoFiltro === 'estricto' 
-              ? 'No hay recetas que usen únicamente esa selección. Probá agregar algún otro ingrediente o cambiar a "Coincidencia parcial".' 
+              ? 'No hay recetas que combinen exactamente todos esos ingredientes juntos. Probá desmarcar alguno o cambiar a "Coincidencia parcial".' 
               : 'No encontramos recetas con esos ingredientes.'}</p>
           </div>
         `;
