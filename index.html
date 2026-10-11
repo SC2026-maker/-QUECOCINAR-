@@ -43,7 +43,7 @@
             <i class="fa-solid fa-filter text-[10px] mr-1"></i> Coincidencia parcial
           </button>
           <button id="btnModoEstricto" onclick="cambiarModoFiltro('estricto')" class="flex-1 py-1.5 rounded-lg text-center transition text-slate-500 hover:text-slate-700">
-            <i class="fa-solid fa-lock text-[10px] mr-1"></i> Solo lo que tengo
+            <i class="fa-solid fa-lock text-[10px] mr-1"></i> Estricto (Proteínas)
           </button>
         </div>
 
@@ -88,7 +88,7 @@
     let ingredientesSeleccionados = new Set();
     let modoFiltro = 'flexible';
 
-    // DICCIONARIO ESTRUCTURADO Y COMPLETO
+    // DICCIONARIO DE CATEGORÍAS
     const DICCIONARIO_CATEGORIAS = {
       carnes: {
         titulo: "🥩 Carnes y Proteínas",
@@ -132,81 +132,22 @@
       }
     };
 
-    // TABLA DE MAPEO DIRECTO DE CANONIZACIÓN
     const MAPEO_CANONICO = {
-      'pepino': 'pepino',
-      'lechuga': 'lechuga',
-      'tomate': 'tomate',
-      'cebolla': 'cebolla',
-      'zanahoria': 'zanahoria',
-      'espinaca': 'espinaca',
-      'papa': 'papa',
-      'brocoli': 'brócoli',
-      'brócoli': 'brócoli',
-      'aguacate': 'aguacate',
-      'palta': 'aguacate',
-      'apio': 'apio',
-      'pimiento': 'pimiento',
-      'morron': 'pimiento',
-      'morrón': 'pimiento',
-      'ajo': 'ajo',
-      'chicharos': 'chícharos',
-      'chícharos': 'chícharos',
-      'fresa': 'fresas',
-      'fresas': 'fresas',
-      'frutilla': 'fresas',
-      'frutillas': 'fresas',
-      'platano': 'plátano',
-      'plátano': 'plátano',
-      'banana': 'plátano',
-      'manzana': 'manzana',
-      'pera': 'pera',
-      'mango': 'mango',
-      'piña': 'piña',
-      'pina': 'piña',
-      'durazno': 'durazno',
-      'frambuesa': 'frambuesas',
-      'frambuesas': 'frambuesas',
-      'uva': 'uvas',
-      'uvas': 'uvas',
-      'frutos rojos': 'frutos rojos',
-      'arandano': 'arándanos',
-      'arándano': 'arándanos',
-      'arandanos': 'arándanos',
-      'arándanos': 'arándanos',
-      'datil': 'dátiles',
-      'dátil': 'dátiles',
-      'datiles': 'dátiles',
-      'dátiles': 'dátiles',
-      'ricota': 'ricota',
-      'ricotta': 'ricota',
-      'queso fresco': 'queso fresco',
-      'yogur': 'yogur',
-      'yogurt': 'yogur',
-      'leche': 'leche',
-      'huevo': 'huevo',
-      'huevos': 'huevo',
-      'pollo': 'pollo',
-      'atun': 'atún',
-      'atún': 'atún',
-      'avena': 'avena',
-      'arroz': 'arroz',
-      'pan': 'pan integral',
-      'tostadas': 'tostadas integrales',
-      'tortilla': 'tortilla integral',
-      'lenteja': 'lentejas',
-      'lentejas': 'lentejas',
-      'garbanzo': 'garbanzos',
-      'garbanzos': 'garbanzos',
-      'frijol': 'frijoles',
-      'frijoles': 'frijoles',
-      'albahaca': 'albahaca',
-      'aceite': 'aceite de oliva',
-      'canela': 'canela',
-      'cacao': 'cacao puro',
-      'chia': 'chía',
-      'chía': 'chía',
-      'miel': 'miel'
+      'pepino': 'pepino', 'lechuga': 'lechuga', 'tomate': 'tomate', 'cebolla': 'cebolla', 'zanahoria': 'zanahoria',
+      'espinaca': 'espinaca', 'papa': 'papa', 'brocoli': 'brócoli', 'brócoli': 'brócoli', 'aguacate': 'aguacate',
+      'palta': 'aguacate', 'apio': 'apio', 'pimiento': 'pimiento', 'morron': 'pimiento', 'morrón': 'pimiento',
+      'ajo': 'ajo', 'chicharos': 'chícharos', 'chícharos': 'chícharos', 'fresa': 'fresas', 'fresas': 'fresas',
+      'frutilla': 'fresas', 'frutillas': 'fresas', 'platano': 'plátano', 'plátano': 'plátano', 'banana': 'plátano',
+      'manzana': 'manzana', 'pera': 'pera', 'mango': 'mango', 'piña': 'piña', 'pina': 'piña', 'durazno': 'durazno',
+      'frambuesa': 'frambuesas', 'frambuesas': 'frambuesas', 'uva': 'uvas', 'uvas': 'uvas', 'frutos rojos': 'frutos rojos',
+      'arandano': 'arándanos', 'arándano': 'arándanos', 'arandanos': 'arándanos', 'arándanos': 'arándanos',
+      'datil': 'dátiles', 'dátil': 'dátiles', 'datiles': 'dátiles', 'dátiles': 'dátiles', 'ricota': 'ricota',
+      'ricotta': 'ricota', 'queso fresco': 'queso fresco', 'yogur': 'yogur', 'yogurt': 'yogur', 'leche': 'leche',
+      'huevo': 'huevo', 'huevos': 'huevo', 'pollo': 'pollo', 'atun': 'atún', 'atún': 'atún', 'avena': 'avena',
+      'arroz': 'arroz', 'pan': 'pan integral', 'tostadas': 'tostadas integrales', 'tortilla': 'tortilla integral',
+      'lenteja': 'lentejas', 'lentejas': 'lentejas', 'garbanzo': 'garbanzos', 'garbanzos': 'garbanzos',
+      'frijol': 'frijoles', 'frijoles': 'frijoles', 'albahaca': 'albahaca', 'aceite': 'aceite de oliva',
+      'canela': 'canela', 'cacao': 'cacao puro', 'chia': 'chía', 'chía': 'chía', 'miel': 'miel'
     };
 
     function obtenerCampo(item, clave) {
@@ -218,18 +159,15 @@
       return "";
     }
 
-    // Normalizador e higienizador de ingredientes que desglosa combinaciones pegadas
     function procesarListaIngredientes(textoBruto) {
       if (!textoBruto) return [];
-      
-      // Separar primero por comas
       let fragmentos = String(textoBruto).split(',');
       let resultadoLimpiado = [];
 
       fragmentos.forEach(frag => {
         let t = frag.toLowerCase().trim();
-        t = t.replace(/\(.*?\)/g, ''); // Quitar paréntesis
-        t = t.replace(/[0-9]+/g, ''); // Quitar números
+        t = t.replace(/\(.*?\)/g, '');
+        t = t.replace(/[0-9]+/g, '');
 
         const palabrasRelleno = [
           'cucharadas', 'cucharada', 'cucharadita', 'cucharaditas', 'taza', 'tazas', 
@@ -239,7 +177,6 @@
 
         let palabras = t.split(/\s+/).filter(p => p.trim().length > 0 && !palabrasRelleno.includes(p));
 
-        // Verificar si alguna palabra individual pertenece a nuestro mapa canónico
         let hallados = [];
         palabras.forEach(pal => {
           if (MAPEO_CANONICO[pal]) {
@@ -446,6 +383,20 @@
         if (modoFiltro === 'flexible') {
           return Array.from(ingredientesSeleccionados).some(ing => receta.ingredientes.includes(ing));
         } else {
+          // MODO ESTRICTO BASADO EN PROTEÍNAS:
+          // Identificar si el usuario seleccionó alguna proteína (perteneciente a "Carnes y Proteínas")
+          const proteinasSeleccionadas = Array.from(ingredientesSeleccionados).filter(ing => 
+            DICCIONARIO_CATEGORIAS.carnes.palabras.some(p => ing.toLowerCase().includes(p)) ||
+            DICCIONARIO_CATEGORIAS.lacteos.palabras.some(p => ing.toLowerCase().includes(p))
+          );
+
+          // Si seleccionó proteínas, la receta DEBE contener al menos una de esas proteínas
+          if (proteinasSeleccionadas.length > 0) {
+            const tieneProteina = proteinasSeleccionadas.some(prot => receta.ingredientes.includes(prot));
+            if (!tieneProteina) return false;
+          }
+
+          // Además, la receta solo debe usar ingredientes que el usuario tenga seleccionados
           return receta.ingredientes.every(ing => ingredientesSeleccionados.has(ing));
         }
       });
@@ -456,7 +407,7 @@
         lista.innerHTML = `
           <div class="bg-white p-6 rounded-2xl text-center text-slate-400 text-xs space-y-2">
             <i class="fa-regular fa-face-frown text-2xl"></i>
-            <p>No encontramos recetas ${modoFiltro === 'estricto' ? 'que usen estrictamente solo esos ingredientes' : 'con esos ingredientes'}.</p>
+            <p>No encontramos recetas ${modoFiltro === 'estricto' ? 'con esa combinación estricta de proteínas' : 'con esos ingredientes'}.</p>
           </div>
         `;
         return;
