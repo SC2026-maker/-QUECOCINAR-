@@ -1,132 +1,223 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" class="h-full">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Recetario Flash</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- FontAwesome Icons -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  <!-- Google Fonts (Inter & Montserrat) -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+  <!-- Google Fonts (Plus Jakarta Sans & Montserrat) -->
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            display: ['"Montserrat"', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#fff7ed',
+              100: '#ffedd5',
+              200: '#fed7aa',
+              300: '#fdba74',
+              400: '#fb923c',
+              500: '#f97316', // Vibrant Orange
+              600: '#ea580c', // Terracotta Accent
+              700: '#c2410c',
+              800: '#9a3412',
+              900: '#7c2d12',
+            }
+          },
+          boxShadow: {
+            'glow': '0 0 25px -5px rgba(249, 115, 22, 0.35)',
+            'card': '0 10px 30px -5px rgba(15, 23, 42, 0.05)',
+            'float': '0 20px 40px -10px rgba(15, 23, 42, 0.12)'
+          }
+        }
+      }
+    }
+  </script>
+
   <style>
-    body { font-family: 'Inter', sans-serif; }
-    h1, h2, h3 { font-family: 'Montserrat', sans-serif; }
-    .step-check:checked + label { text-decoration: line-through; opacity: 0.6; }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    h1, h2, h3, .font-display {
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+
+    /* Step Checkbox strike-through animation */
+    .step-check:checked + label {
+      text-decoration: line-through;
+      color: #94a3b8;
+    }
+
+    /* Custom accordion transition */
+    details summary::-webkit-details-marker {
+      display: none;
+    }
+
+    /* Smooth focus ring */
+    .focus-ring {
+      transition: all 0.2s ease-in-out;
+    }
+    .focus-ring:focus-within {
+      box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.25);
+    }
   </style>
 </head>
-<body class="bg-slate-100 text-slate-800 min-h-screen pb-20">
 
-  <!-- Header con Gradiente y Branding -->
-  <header class="bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white p-4 shadow-lg sticky top-0 z-30">
-    <div class="max-w-md mx-auto flex justify-between items-center">
-      <div class="flex items-center gap-2.5">
-        <div class="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/20">
-          <i class="fa-solid fa-bolt text-yellow-300 text-lg"></i>
-        </div>
-        <div>
-          <h1 class="text-lg font-extrabold tracking-tight leading-none">Recetario Flash</h1>
-          <p class="text-[10px] text-amber-100 font-medium mt-0.5">Ideas rápidas con lo que tenés</p>
-        </div>
-      </div>
-      <span class="text-[10px] bg-white/20 text-white px-2.5 py-1 rounded-full font-semibold border border-white/20 backdrop-blur-sm">
-        Demo Pro
-      </span>
-    </div>
-  </header>
+<body class="bg-slate-900 text-slate-800 min-h-screen flex justify-center selection:bg-brand-500 selection:text-white">
 
-  <main class="max-w-md mx-auto p-4 space-y-5">
+  <!-- Mobile Viewport Wrapper Container for PWA Feel -->
+  <div class="w-full max-w-md bg-slate-50 min-h-screen flex flex-col shadow-2xl relative pb-24">
 
-    <!-- Tarjeta Principal de Control -->
-    <section class="bg-white rounded-3xl p-4 shadow-sm border border-slate-200/80 space-y-4">
-      
+    <header class="bg-gradient-to-br from-amber-500 via-brand-500 to-brand-600 text-white p-4 pt-6 shadow-lg sticky top-0 z-30 rounded-b-3xl">
       <div class="flex justify-between items-center">
-        <div>
-          <h2 class="font-bold text-slate-700 text-sm flex items-center gap-2">
-            <i class="fa-solid fa-basket-shopping text-amber-500"></i> ¿Qué tenés en la heladera?
-          </h2>
-          <p class="text-[11px] text-slate-400 mt-0.5">Seleccioná los ingredientes o escribilos:</p>
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/30 shadow-inner">
+            <i class="fa-solid fa-bolt text-amber-200 text-xl animate-pulse"></i>
+          </div>
+          <div>
+            <h1 class="text-xl font-extrabold tracking-tight leading-none text-white font-display">Recetario Flash</h1>
+            <p class="text-[11px] text-amber-100/90 font-medium mt-1 flex items-center gap-1">
+              <i class="fa-solid fa-wand-magic-sparkles text-[10px]"></i> Ideas rápidas con lo que tenés
+            </p>
+          </div>
         </div>
-        <!-- Botón Limpiar -->
-        <button id="btnLimpiar" onclick="limpiarSeleccion()" class="hidden text-xs text-amber-600 hover:text-amber-800 font-semibold flex items-center gap-1.5 bg-amber-50 hover:bg-amber-100 px-3 py-1.5 rounded-xl transition border border-amber-200/50">
-          <i class="fa-solid fa-rotate-left text-[10px]"></i> Limpiar
-        </button>
+        <span class="text-[11px] bg-white/20 text-white px-3 py-1 rounded-full font-bold border border-white/30 backdrop-blur-md shadow-sm">
+          PRO Demo
+        </span>
       </div>
+    </header>
 
-      <!-- Buscador Rápido de Ingredientes -->
-      <div class="relative">
-        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-        <input type="text" id="inputBuscarIngrediente" onkeyup="alEscribirBuscador()" placeholder="Escribí ingredientes (ej. atun, pasta)..." class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:bg-white transition">
-      </div>
+    <main class="px-4 pt-5 space-y-6 flex-1">
 
-      <!-- Selector de Modo de Filtro -->
-      <div class="bg-slate-100 p-1 rounded-2xl flex text-xs font-semibold border border-slate-200/50">
-        <button id="btnModoFlexible" onclick="cambiarModoFiltro('flexible')" class="flex-1 py-2 rounded-xl text-center transition bg-white text-amber-600 shadow-sm font-bold">
-          <i class="fa-solid fa-filter text-[10px] mr-1"></i> Coincidencia parcial
-        </button>
-        <button id="btnModoEstricto" onclick="cambiarModoFiltro('estricto')" class="flex-1 py-2 rounded-xl text-center transition text-slate-500 hover:text-slate-700">
-          <i class="fa-solid fa-lock text-[10px] mr-1"></i> Solo lo que tengo
-        </button>
-      </div>
+      <!-- Interactive Refrigerator Control Card -->
+      <section class="bg-white rounded-3xl p-5 shadow-card border border-slate-100 space-y-4 relative overflow-hidden">
+        <!-- Subtle gradient backdrop accent -->
+        <div class="absolute -right-10 -top-10 w-32 h-32 bg-amber-100/50 rounded-full blur-2xl pointer-events-none"></div>
 
-      <!-- Leyenda Dinámica -->
-      <div id="leyendaModo" class="text-[11px] text-slate-600 bg-amber-50/60 p-2.5 rounded-xl border border-amber-200/50 flex items-center gap-2">
-        <i class="fa-solid fa-circle-info text-amber-500 text-xs shrink-0"></i>
-        <span>Muestra recetas que incluyan <strong>al menos uno</strong> de tus ingredientes seleccionados.</span>
-      </div>
-
-      <!-- Categorías Desplegables -->
-      <div id="contenedorCategorias" class="space-y-2.5 pt-1">
-        <div class="text-center py-4 text-xs text-slate-400 italic">
-          <i class="fa-solid fa-circle-notch fa-spin text-amber-500 mb-1 block text-base"></i> Cargando ingredientes...
+        <div class="flex justify-between items-center relative z-10">
+          <div>
+            <h2 class="font-bold text-slate-800 text-base flex items-center gap-2">
+              <span class="w-7 h-7 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center text-xs">
+                <i class="fa-solid fa-basket-shopping"></i>
+              </span> 
+              ¿Qué tenés en la heladera?
+            </h2>
+            <p class="text-[11px] text-slate-400 mt-0.5 font-medium">Escribí o seleccioná de la lista:</p>
+          </div>
+          
+          <!-- Clear Button -->
+          <button id="btnLimpiar" onclick="limpiarSeleccion()" class="hidden text-xs text-brand-600 hover:text-brand-700 font-bold flex items-center gap-1.5 bg-brand-50 hover:bg-brand-100 px-3 py-1.5 rounded-xl transition-all duration-200 border border-brand-200/60 active:scale-95">
+            <i class="fa-solid fa-rotate-left text-[10px]"></i> Limpiar
+          </button>
         </div>
+
+        <!-- Quick Ingredient Search Input -->
+        <div class="relative focus-ring rounded-2xl overflow-hidden border border-slate-200 bg-slate-50/80 transition">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+          <input type="text" id="inputBuscarIngrediente" onkeyup="alEscribirBuscador()" placeholder="Buscar ingrediente (ej. atun, pasta)..." class="w-full bg-transparent pl-9 pr-8 py-2.5 text-xs font-medium text-slate-700 placeholder-slate-400 focus:outline-none">
+          <button onclick="document.getElementById('inputBuscarIngrediente').value=''; alEscribirBuscador();" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500 text-xs">
+            <i class="fa-solid fa-circle-xmark"></i>
+          </button>
+        </div>
+
+        <!-- Matching Mode Filter Switch -->
+        <div class="bg-slate-100 p-1 rounded-2xl flex text-xs font-semibold border border-slate-200/60">
+          <button id="btnModoFlexible" onclick="cambiarModoFiltro('flexible')" class="flex-1 py-2.5 rounded-xl text-center transition-all duration-300 bg-white text-brand-600 shadow-sm font-bold flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-layer-group text-[11px]"></i> Parcial
+          </button>
+          <button id="btnModoEstricto" onclick="cambiarModoFiltro('estricto')" class="flex-1 py-2.5 rounded-xl text-center transition-all duration-300 text-slate-500 hover:text-slate-700 flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-lock text-[11px]"></i> Solo lo que tengo
+          </button>
+        </div>
+
+        <!-- Mode Dynamic Legend Badge -->
+        <div id="leyendaModo" class="text-[11px] text-slate-600 bg-amber-50/80 p-3 rounded-2xl border border-amber-200/60 flex items-center gap-2.5 transition-all">
+          <i class="fa-solid fa-circle-info text-amber-500 text-sm shrink-0"></i>
+          <span class="leading-relaxed">Muestra recetas que incluyan <strong>al menos uno</strong> de tus ingredientes.</span>
+        </div>
+
+        <!-- Categories Accordion List -->
+        <div id="contenedorCategorias" class="space-y-2.5 pt-1">
+          <div class="text-center py-6 text-xs text-slate-400 font-medium">
+            <i class="fa-solid fa-circle-notch fa-spin text-brand-500 text-lg mb-2 block"></i>
+            Cargando despensa de ingredientes...
+          </div>
+        </div>
+      </section>
+
+      <section id="seccionRecetas" class="space-y-4">
+        <div class="flex justify-between items-center px-1">
+          <div class="flex items-center gap-2">
+            <h2 class="font-extrabold text-slate-800 text-lg font-display">Recetas Disponibles</h2>
+          </div>
+          <span id="contadorRecetas" class="text-xs font-extrabold bg-gradient-to-r from-amber-500 to-brand-500 text-white px-3 py-1 rounded-full shadow-md shadow-brand-500/20">
+            0
+          </span>
+        </div>
+
+        <!-- SheetDB Loading Spinner -->
+        <div id="loadingState" class="text-center py-12 bg-white rounded-3xl border border-slate-100 shadow-card">
+          <div class="w-12 h-12 bg-brand-50 text-brand-500 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-inner">
+            <i class="fa-solid fa-spinner fa-spin text-xl"></i>
+          </div>
+          <p class="text-xs font-bold text-slate-700">Conectando con la cocina...</p>
+          <p class="text-[11px] text-slate-400 mt-1">Sincronizando recetas desde tu planilla</p>
+        </div>
+
+        <!-- Dynamic Recipe List Target -->
+        <div id="listaRecetas" class="space-y-4">
+          <!-- Rendered recipe cards -->
+        </div>
+      </section>
+
+    </main>
+
+    <nav class="fixed bottom-0 left-0 right-0 z-30 max-w-md mx-auto p-3 bg-gradient-to-t from-slate-50 via-slate-50/90 to-transparent pointer-events-none">
+      <div class="bg-slate-900/90 backdrop-blur-xl border border-slate-800 text-slate-400 py-2.5 px-6 rounded-2xl shadow-float flex justify-around items-center text-[10px] font-bold pointer-events-auto">
+        <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="flex flex-col items-center gap-1 text-amber-400 hover:text-amber-300 transition-colors">
+          <i class="fa-solid fa-basket-shopping text-base"></i>
+          <span>Ingredientes</span>
+        </button>
+        <div class="h-6 w-[1px] bg-slate-800"></div>
+        <button onclick="document.getElementById('seccionRecetas').scrollIntoView({behavior: 'smooth'})" class="flex flex-col items-center gap-1 hover:text-amber-400 transition-colors">
+          <i class="fa-solid fa-utensils text-base"></i>
+          <span>Recetas</span>
+        </button>
       </div>
-    </section>
+    </nav>
 
-    <!-- Listado de Recetas Resultantes -->
-    <section id="seccionRecetas" class="space-y-3.5">
-      <div class="flex justify-between items-center px-1">
-        <h2 class="font-bold text-slate-800 text-base">Recetas encontradas</h2>
-        <span id="contadorRecetas" class="text-xs font-bold bg-amber-500 text-white px-2.5 py-0.5 rounded-full shadow-sm">0</span>
-      </div>
+    <footer class="text-center py-6 px-4 text-[11px] text-slate-400 font-medium space-y-1">
+      <p>© 2026 <strong>Carolina Sayago</strong>. Todos los derechos reservados.</p>
+      <p class="text-[10px] text-slate-300">Queda prohibida la reproducción total o parcial de este recetario.</p>
+    </footer>
 
-      <!-- Spinner / Indicador de Carga -->
-      <div id="loadingState" class="text-center py-10 hidden">
-        <i class="fa-solid fa-spinner fa-spin text-3xl text-amber-500 mb-2"></i>
-        <p class="text-xs text-slate-500 font-medium">Sincronizando recetas desde la planilla...</p>
-      </div>
-
-      <!-- Contenedor Dinámico de Tarjetas -->
-      <div id="listaRecetas" class="space-y-3.5">
-        <!-- Tarjetas de recetas aquí -->
-      </div>
-    </section>
-
-  </main>
-
-  <!-- Navigation Bar Inferior Fija (Nativa estilo App) -->
-  <nav class="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t border-slate-200 py-2 z-30">
-    <div class="max-w-md mx-auto flex justify-around items-center text-[10px] font-semibold text-slate-500">
-      <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="flex flex-col items-center gap-1 text-amber-600">
-        <i class="fa-solid fa-basket-shopping text-base"></i>
-        <span>Ingredientes</span>
-      </button>
-      <button onclick="document.getElementById('seccionRecetas').scrollIntoView({behavior: 'smooth'})" class="flex flex-col items-center gap-1 hover:text-amber-600 transition">
-        <i class="fa-solid fa-utensils text-base"></i>
-        <span>Recetas</span>
-      </button>
-    </div>
-  </nav>
-
-  <!-- Footer -->
-  <footer class="text-center py-6 text-[11px] text-slate-400 max-w-md mx-auto w-full px-4">
-    <p>© 2026 Carolina Sayago. Todos los derechos reservados.</p>
-    <p class="mt-0.5 text-[10px]">Queda prohibida la reproducción total o parcial de este recetario.</p>
-  </footer>
+  </div>
 
   <script>
-    // REEMPLAZA ESTA URL POR LA TUYA DE SHEETDB:
+    // SheetDB API URL Endpoint
     const API_URL = 'https://sheetdb.io/api/v1/ur8nsa4jsgn3h'; 
 
     let recetasBase = [];
@@ -135,15 +226,21 @@
 
     const DICCIONARIO_CATEGORIAS = {
       carnes: {
-        titulo: "🥩 Carnes y Proteínas",
+        titulo: "Carnes y Proteínas",
+        icon: "fa-drumstick-bite",
+        badgeBg: "bg-red-50 text-red-600 border-red-100",
         palabras: ["pollo", "carne", "cerdo", "pescado", "huevo", "huevos", "atun", "atún", "jamon", "jamón", "salchicha", "milanesa"]
       },
       lacteos: {
-        titulo: "🥛 Lácteos y Quesos",
+        titulo: "Lácteos y Quesos",
+        icon: "fa-cheese",
+        badgeBg: "bg-blue-50 text-blue-600 border-blue-100",
         palabras: ["leche", "queso", "yogur", "yogurt", "manteca", "crema", "mozzarella", "ricota", "ricotta", "requeson", "requesón", "queso fresco"]
       },
       verduras: {
-        titulo: "🥦 Verduras y Hortalizas",
+        titulo: "Verduras y Hortalizas",
+        icon: "fa-carrot",
+        badgeBg: "bg-emerald-50 text-emerald-600 border-emerald-100",
         palabras: [
           "pepino", "lechuga", "tomate", "cebolla", "zanahoria", "espinaca", "papa", "brócoli", "brocoli", 
           "choclo", "zapallo", "zucchini", "pimiento", "morron", "morrón", "ajo", "apio", "chícharos", "chicharos", 
@@ -151,7 +248,9 @@
         ]
       },
       frutas: {
-        titulo: "🍎 Frutas",
+        titulo: "Frutas",
+        icon: "fa-apple-whole",
+        badgeBg: "bg-rose-50 text-rose-600 border-rose-100",
         palabras: [
           "manzana", "banana", "platano", "plátano", "fresa", "fresas", "frutilla", "frutillas", "mango", "piña", "pina", 
           "durazno", "pera", "frambuesa", "frambuesas", "uva", "uvas", "frutos rojos", "arandanos", "arándanos", 
@@ -159,7 +258,9 @@
         ]
       },
       cereales: {
-        titulo: "🌾 Cereales, Harinas y Legumbres",
+        titulo: "Cereales, Harinas y Legumbres",
+        icon: "fa-wheat-awn",
+        badgeBg: "bg-amber-50 text-amber-700 border-amber-100",
         palabras: [
           "arroz", "fideo", "fideos", "pasta", "avena", "harina", "pan", "tostadas", "tortilla", "masa", "tarta", 
           "empanada", "polenta", "galletita", "mani", "maní", "crema de maní", "lenteja", "lentejas", "garbanzo", "garbanzos", 
@@ -167,7 +268,9 @@
         ]
       },
       almacen: {
-        titulo: "🥫 Almacén y Condimentos",
+        titulo: "Almacén y Condimentos",
+        icon: "fa-jar",
+        badgeBg: "bg-purple-50 text-purple-600 border-purple-100",
         palabras: [
           "aceite", "sal", "oregano", "orégano", "mayonesa", "salsa", "vinagre", "pimienta", "pimenton", "pimentón", 
           "azucar", "azúcar", "agua", "cacao", "canela", "frutos secos", "linaza", "semilla", "semillas", "chia", "chía", 
@@ -271,7 +374,7 @@
             const ingredientesLimpios = procesarListaIngredientes(rawIngredientesStr);
 
             return {
-              id: obtenerCampo(item, 'ID') || Math.random(),
+              id: obtenerCampo(item, 'ID') || Math.random().toString(36).substring(2, 9),
               titulo: obtenerCampo(item, 'Titulo') || "Sin Título",
               tiempo: obtenerCampo(item, 'Tiempo') || "15 min",
               ingredientesOriginales: rawIngredientes.map(i => String(i).trim()),
@@ -287,12 +390,12 @@
 
       } catch (error) {
         console.error("Error al cargar:", error);
-        contCategorias.innerHTML = `<p class="text-xs text-red-500">Error al procesar: ${error.message}</p>`;
+        contCategorias.innerHTML = `<p class="text-xs text-red-500 font-medium text-center py-3">Error de conexión con la hoja de datos.</p>`;
         lista.innerHTML = `
-          <div class="bg-red-50 border border-red-200 text-red-700 p-4 rounded-2xl text-xs text-center">
-            <i class="fa-solid fa-circle-exclamation text-xl mb-1"></i>
-            <p class="font-bold">No se pudieron cargar las recetas</p>
-            <p class="mt-1 text-[11px]">${error.message}</p>
+          <div class="bg-red-50 border border-red-200 text-red-700 p-5 rounded-3xl text-xs text-center space-y-2">
+            <i class="fa-solid fa-circle-exclamation text-2xl text-red-500"></i>
+            <p class="font-bold text-sm">No se pudieron sincronizar las recetas</p>
+            <p class="text-slate-600">${error.message}</p>
           </div>
         `;
       } finally {
@@ -337,16 +440,24 @@
 
         const catData = DICCIONARIO_CATEGORIAS[catKey];
         const details = document.createElement('details');
-        details.className = 'group border border-slate-200/80 rounded-2xl bg-slate-50/50 overflow-hidden text-xs transition';
+        details.className = 'group border border-slate-200/70 rounded-2xl bg-slate-50/50 overflow-hidden text-xs transition-all duration-200';
         
-        if (catKey === 'carnes' || catKey === 'verduras' || catKey === 'frutas' || catKey === 'lacteos' || catKey === 'cereales') details.open = true;
+        if (['carnes', 'verduras', 'frutas', 'lacteos', 'cereales'].includes(catKey)) details.open = true;
 
         details.innerHTML = `
           <summary class="cursor-pointer font-bold text-slate-700 p-3 bg-white flex justify-between items-center hover:bg-slate-50 transition select-none">
-            <span>${catData.titulo} (${arrayIngredientes.length})</span>
-            <i class="fa-solid fa-chevron-down text-slate-400 text-xs transition-transform group-open:rotate-180"></i>
+            <div class="flex items-center gap-2.5">
+              <span class="w-6 h-6 rounded-lg ${catData.badgeBg} flex items-center justify-center text-[11px] border">
+                <i class="fa-solid ${catData.icon}"></i>
+              </span>
+              <span>${catData.titulo}</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] font-extrabold bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full">${arrayIngredientes.length}</span>
+              <i class="fa-solid fa-chevron-down text-slate-400 text-xs transition-transform duration-200 group-open:rotate-180"></i>
+            </div>
           </summary>
-          <div class="p-3 flex flex-wrap gap-2 border-t border-slate-100 bg-white" id="grupo-${catKey}">
+          <div class="p-3 flex flex-wrap gap-1.5 border-t border-slate-100 bg-white" id="grupo-${catKey}">
           </div>
         `;
 
@@ -356,10 +467,10 @@
           const btn = document.createElement('button');
           btn.textContent = ing;
           btn.dataset.ingrediente = ing;
-          btn.className = `btn-ingrediente px-3 py-1.5 rounded-full text-xs font-medium border transition ${
+          btn.className = `btn-ingrediente px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all duration-150 active:scale-95 ${
             ingredientesSeleccionados.has(ing) 
-              ? 'bg-amber-500 text-white border-amber-500 shadow-sm' 
-              : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'
+              ? 'bg-gradient-to-r from-amber-500 to-brand-500 text-white border-brand-500 shadow-md shadow-brand-500/20' 
+              : 'bg-slate-50 text-slate-600 border-slate-200/80 hover:bg-slate-100'
           }`;
           btn.onclick = () => toggleIngrediente(ing, btn);
           divBotones.appendChild(btn);
@@ -372,7 +483,6 @@
     function alEscribirBuscador() {
       const filtro = document.getElementById('inputBuscarIngrediente').value.toLowerCase().trim();
       
-      // Filtrar botones desplegables
       const botones = document.querySelectorAll('.btn-ingrediente');
       botones.forEach(btn => {
         const texto = btn.textContent.toLowerCase();
@@ -394,13 +504,13 @@
       const leyenda = document.getElementById('leyendaModo');
 
       if (modo === 'flexible') {
-        btnFlex.className = 'flex-1 py-2 rounded-xl text-center transition bg-white text-amber-600 shadow-sm font-bold';
-        btnEstr.className = 'flex-1 py-2 rounded-xl text-center transition text-slate-500 hover:text-slate-700 font-semibold';
-        leyenda.innerHTML = `<i class="fa-solid fa-circle-info text-amber-500 text-xs shrink-0"></i> <span>Muestra recetas que incluyan <strong>al menos uno</strong> de tus ingredientes seleccionados.</span>`;
+        btnFlex.className = 'flex-1 py-2.5 rounded-xl text-center transition-all duration-300 bg-white text-brand-600 shadow-sm font-bold flex items-center justify-center gap-1.5';
+        btnEstr.className = 'flex-1 py-2.5 rounded-xl text-center transition-all duration-300 text-slate-500 hover:text-slate-700 flex items-center justify-center gap-1.5';
+        leyenda.innerHTML = `<i class="fa-solid fa-circle-info text-amber-500 text-sm shrink-0"></i> <span class="leading-relaxed">Muestra recetas que incluyan <strong>al menos uno</strong> de tus ingredientes seleccionados.</span>`;
       } else {
-        btnEstr.className = 'flex-1 py-2 rounded-xl text-center transition bg-white text-amber-600 shadow-sm font-bold';
-        btnFlex.className = 'flex-1 py-2 rounded-xl text-center transition text-slate-500 hover:text-slate-700 font-semibold';
-        leyenda.innerHTML = `<i class="fa-solid fa-lock text-amber-500 text-xs shrink-0"></i> <span>Muestra recetas que incluyan <strong>todos</strong> tus ingredientes seleccionados.</span>`;
+        btnEstr.className = 'flex-1 py-2.5 rounded-xl text-center transition-all duration-300 bg-white text-brand-600 shadow-sm font-bold flex items-center justify-center gap-1.5';
+        btnFlex.className = 'flex-1 py-2.5 rounded-xl text-center transition-all duration-300 text-slate-500 hover:text-slate-700 flex items-center justify-center gap-1.5';
+        leyenda.innerHTML = `<i class="fa-solid fa-lock text-brand-500 text-sm shrink-0"></i> <span class="leading-relaxed">Muestra recetas que incluyan <strong>todos</strong> tus ingredientes seleccionados.</span>`;
       }
 
       filtrarYMostrarRecetas();
@@ -409,10 +519,10 @@
     function toggleIngrediente(ingrediente, boton) {
       if (ingredientesSeleccionados.has(ingrediente)) {
         ingredientesSeleccionados.delete(ingrediente);
-        boton.className = 'btn-ingrediente px-3 py-1.5 rounded-full text-xs font-medium border bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200';
+        boton.className = 'btn-ingrediente px-3 py-1.5 rounded-xl text-xs font-semibold border bg-slate-50 text-slate-600 border-slate-200/80 hover:bg-slate-100 transition-all active:scale-95';
       } else {
         ingredientesSeleccionados.add(ingrediente);
-        boton.className = 'btn-ingrediente px-3 py-1.5 rounded-full text-xs font-medium border bg-amber-500 text-white border-amber-500 shadow-sm';
+        boton.className = 'btn-ingrediente px-3 py-1.5 rounded-xl text-xs font-semibold border bg-gradient-to-r from-amber-500 to-brand-500 text-white border-brand-500 shadow-md shadow-brand-500/20 transition-all active:scale-95';
       }
       
       actualizarEstadoBotonLimpiar();
@@ -437,7 +547,7 @@
       const botones = document.querySelectorAll('.btn-ingrediente');
       botones.forEach(btn => {
         btn.style.display = 'inline-block';
-        btn.className = 'btn-ingrediente px-3 py-1.5 rounded-full text-xs font-medium border bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200';
+        btn.className = 'btn-ingrediente px-3 py-1.5 rounded-xl text-xs font-semibold border bg-slate-50 text-slate-600 border-slate-200/80 hover:bg-slate-100 transition-all active:scale-95';
       });
 
       actualizarEstadoBotonLimpiar();
@@ -479,11 +589,16 @@
 
       if (filtradas.length === 0) {
         lista.innerHTML = `
-          <div class="bg-white p-6 rounded-3xl text-center text-slate-400 text-xs space-y-2 border border-slate-200/60 shadow-sm">
-            <i class="fa-regular fa-face-frown text-3xl text-slate-300"></i>
-            <p class="font-medium">${modoFiltro === 'estricto' 
-              ? 'No hay recetas que combinen exactamente todos esos ingredientes juntos. Probá desmarcar alguno o cambiar a "Coincidencia parcial".' 
-              : 'No encontramos recetas con esos ingredientes.'}</p>
+          <div class="bg-white p-8 rounded-3xl text-center text-slate-400 space-y-3 border border-slate-100 shadow-card">
+            <div class="w-12 h-12 bg-slate-50 text-slate-300 rounded-2xl flex items-center justify-center mx-auto text-xl">
+              <i class="fa-solid fa-utensils"></i>
+            </div>
+            <p class="font-bold text-slate-700 text-xs">No hay coincidencias exactas</p>
+            <p class="text-[11px] leading-relaxed text-slate-400 max-w-xs mx-auto">${
+              modoFiltro === 'estricto' 
+                ? 'No encontramos platillos con la combinación exacta de todos esos ingredientes. Intenta desmarcar uno o cambiar a modo "Parcial".' 
+                : 'Intenta buscar con otros ingredientes.'
+            }</p>
           </div>
         `;
         return;
@@ -491,19 +606,25 @@
 
       filtradas.forEach(receta => {
         const tarjeta = document.createElement('div');
-        tarjeta.className = 'bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-200/80 space-y-3 transition hover:shadow-md';
+        tarjeta.className = 'bg-white rounded-3xl overflow-hidden shadow-card border border-slate-100 space-y-3 transition-all duration-300 hover:shadow-xl';
         
         const htmlImagen = receta.foto ? `
-          <div class="h-44 w-full overflow-hidden bg-slate-100 relative">
-            <img src="${receta.foto}" alt="${receta.titulo}" class="w-full h-full object-cover" onerror="this.style.display='none'">
+          <div class="h-48 w-full overflow-hidden bg-slate-100 relative group">
+            <img src="${receta.foto}" alt="${receta.titulo}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onerror="this.parentNode.style.display='none'">
+            <div class="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent"></div>
+            <span class="absolute bottom-3 right-3 text-[10px] bg-slate-900/80 backdrop-blur-md text-white px-2.5 py-1 rounded-xl font-bold flex items-center gap-1.5 border border-white/20">
+              <i class="fa-regular fa-clock text-amber-400"></i> ${receta.tiempo}
+            </span>
           </div>
         ` : '';
 
         const htmlConsejos = receta.consejos ? `
-          <div class="bg-amber-50/80 border border-amber-200/80 rounded-2xl p-3 text-[11px] text-amber-900 flex items-start gap-2.5 mt-2">
-            <i class="fa-solid fa-lightbulb text-amber-500 mt-0.5 text-xs"></i>
-            <div>
-              <span class="font-bold">Consejo Flash:</span> ${receta.consejos}
+          <div class="bg-gradient-to-r from-amber-50/90 to-brand-50/50 border border-amber-200/60 rounded-2xl p-3 text-[11px] text-amber-900 flex items-start gap-2.5">
+            <span class="w-5 h-5 rounded-lg bg-amber-400 text-white flex items-center justify-center text-[10px] shrink-0 mt-0.5 shadow-sm">
+              <i class="fa-solid fa-lightbulb"></i>
+            </span>
+            <div class="leading-relaxed">
+              <span class="font-extrabold text-amber-800">Tip de chef:</span> ${receta.consejos}
             </div>
           </div>
         ` : '';
@@ -514,10 +635,12 @@
           ${htmlImagen}
           <div class="p-4 space-y-3">
             <div class="flex justify-between items-start gap-2">
-              <h3 class="font-extrabold text-slate-800 text-sm leading-snug">${receta.titulo}</h3>
-              <span class="text-[11px] bg-slate-100 text-slate-700 px-2.5 py-1 rounded-xl flex items-center gap-1.5 font-semibold whitespace-nowrap border border-slate-200/50">
-                <i class="fa-regular fa-clock text-amber-500"></i> ${receta.tiempo}
-              </span>
+              <h3 class="font-extrabold text-slate-800 text-base leading-snug font-display">${receta.titulo}</h3>
+              ${!receta.foto ? `
+                <span class="text-[10px] bg-slate-100 text-slate-600 px-2.5 py-1 rounded-xl font-bold flex items-center gap-1 whitespace-nowrap shrink-0 border border-slate-200/60">
+                  <i class="fa-regular fa-clock text-brand-500"></i> ${receta.tiempo}
+                </span>
+              ` : ''}
             </div>
             
             <div class="flex flex-wrap gap-1">
@@ -529,15 +652,18 @@
             ${htmlConsejos}
 
             <details class="text-xs text-slate-600 border-t pt-3 border-slate-100 group">
-              <summary class="cursor-pointer font-bold text-amber-600 hover:text-amber-700 flex justify-between items-center select-none">
-                <span>Ver preparación paso a paso</span>
-                <i class="fa-solid fa-chevron-down text-xs text-slate-400 group-open:rotate-180 transition-transform"></i>
+              <summary class="cursor-pointer font-extrabold text-brand-600 hover:text-brand-700 flex justify-between items-center select-none py-1">
+                <span class="flex items-center gap-1.5">
+                  <i class="fa-solid fa-list-check text-brand-500"></i>
+                  Paso a paso interactivo
+                </span>
+                <i class="fa-solid fa-chevron-down text-xs text-slate-400 group-open:rotate-180 transition-transform duration-200"></i>
               </summary>
               <div class="mt-3 space-y-2 text-slate-700">
                 ${listaPasos.map((paso, idx) => `
-                  <div class="flex items-start gap-2.5 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                    <input type="checkbox" id="step-${receta.id}-${idx}" class="step-check mt-0.5 accent-amber-500 rounded cursor-pointer">
-                    <label for="step-${receta.id}-${idx}" class="text-xs leading-relaxed cursor-pointer select-none">${paso}</label>
+                  <div class="flex items-start gap-3 bg-slate-50/80 p-3 rounded-2xl border border-slate-100 hover:bg-slate-100/50 transition">
+                    <input type="checkbox" id="step-${receta.id}-${idx}" class="step-check mt-0.5 accent-brand-500 w-4 h-4 rounded-md cursor-pointer shrink-0">
+                    <label for="step-${receta.id}-${idx}" class="text-xs leading-relaxed cursor-pointer select-none font-medium text-slate-700">${paso}</label>
                   </div>
                 `).join('')}
               </div>
