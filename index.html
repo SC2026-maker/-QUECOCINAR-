@@ -88,6 +88,7 @@
     let ingredientesSeleccionados = new Set();
     let modoFiltro = 'flexible';
 
+    // DICCIONARIO MEJORADO Y AMPLIADO DE CATEGORÍAS
     const DICCIONARIO_CATEGORIAS = {
       carnes: {
         titulo: "🥩 Carnes y Proteínas",
@@ -95,7 +96,7 @@
       },
       cereales: {
         titulo: "🌾 Cereales y Harinas",
-        palabras: ["arroz", "fideo", "fideos", "avena", "harina", "pan", "masa", "tarta", "empanada", "polenta", "galletita", "mani", "maní", "crema de maní"]
+        palabras: ["arroz", "fideo", "fideos", "avena", "harina", "pan", "masa", "tarta", "empanada", "polenta", "galletita", "mani", "maní", "crema de maní", "tostadas integrales", "tortilla integral", "pasta"]
       },
       lacteos: {
         titulo: "🥛 Lácteos y Quesos",
@@ -105,14 +106,20 @@
         titulo: "🥦 Verduras y Frutas",
         palabras: [
           "tomate", "cebolla", "zanahoria", "espinaca", "papa", "lechuga", "choclo", "zapallo", "zucchini", "pimiento", 
-          "morron", "morrón", "ajo", "palta", "limon", "limón", "manzana", "banana", "fresa", "fresas", "platano", 
+          "morron", "morrón", "ajo", "palta", "aguacate", "limon", "limón", "manzana", "banana", "fresa", "fresas", "platano", 
           "plátano", "mango", "piña", "pina", "durazno", "pera", "frambuesa", "frambuesas", "uva", "uvas", "frutos rojos", 
-          "arandanos", "arándanos", "datil", "dátiles", "datiles", "frutas", "kiwi", "ciruela", "sandia", "sandía", "melon", "melón"
+          "arandanos", "arándanos", "datil", "dátiles", "datiles", "frutas", "kiwi", "ciruela", "sandia", "sandía", "melon", "melón",
+          "brócoli", "brocoli", "chícharos", "chicharos", "apio", "pepino", "vegetales", "verduras"
         ]
       },
       almacen: {
         titulo: "🥫 Almacén y Condimentos",
-        palabras: ["aceite", "sal", "oregano", "orégano", "mayonesa", "salsa", "vinagre", "pimienta", "pimenton", "pimentón", "azucar", "azúcar", "agua", "cacao", "canela", "frutos secos", "linaza", "semilla", "semillas", "chia", "chía", "miel"]
+        palabras: [
+          "aceite", "sal", "oregano", "orégano", "mayonesa", "salsa", "vinagre", "pimienta", "pimenton", "pimentón", 
+          "azucar", "azúcar", "agua", "cacao", "canela", "frutos secos", "linaza", "semilla", "semillas", "chia", "chía", 
+          "miel", "albahaca", "perejil", "laurel", "comino", "mostaza", "caldo", "frijol", "frijoles", "lenteja", "lentejas", 
+          "garbanzo", "garbanzos", "arandanos secos"
+        ]
       }
     };
 
@@ -143,6 +150,7 @@
 
       let textoLimpio = palabras.join(' ').trim();
 
+      // Limpieza de palabras compuestas pegadas o variantes
       if (textoLimpio.includes('avena')) return 'avena';
       if (textoLimpio.includes('yogur') || textoLimpio.includes('yogurt')) return 'yogur';
       if (textoLimpio.includes('pan')) return 'pan';
@@ -164,6 +172,15 @@
       if (textoLimpio.includes('arandano') || textoLimpio.includes('arándano')) return 'arándanos';
       if (textoLimpio.includes('datil') || textoLimpio.includes('dátil')) return 'dátiles';
       if (textoLimpio.includes('ricota') || textoLimpio.includes('ricotta')) return 'ricota';
+      if (textoLimpio.includes('aguacate') || textoLimpio.includes('palta')) return 'aguacate';
+      if (textoLimpio.includes('albahaca')) return 'albahaca';
+      if (textoLimpio.includes('apio')) return 'apio';
+      if (textoLimpio.includes('brócoli') || textoLimpio.includes('brocoli')) return 'brócoli';
+      if (textoLimpio.includes('pepino')) return 'pepino';
+      if (textoLimpio.includes('garbanzo')) return 'garbanzos';
+      if (textoLimpio.includes('lenteja')) return 'lentejas';
+      if (textoLimpio.includes('frijol')) return 'frijoles';
+      if (textoLimpio.includes('aceite oliva')) return 'aceite de oliva';
 
       return textoLimpio;
     }
