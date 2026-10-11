@@ -1,0 +1,20 @@
+{
+  "name": "Recetario Flash",
+  "short_name": "Recetario",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f1f5f9",
+  "theme_color": "#f59e0b",
+  "icons": [
+    {
+      "src": "https://images.unsplash.com/photo-1543353071-10c8ba85a904?w=192&h=192&fit=crop",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "https://images.unsplash.com/photo-1543353071-10c8ba85a904?w=512&h=512&fit=crop",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}
