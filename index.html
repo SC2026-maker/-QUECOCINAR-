@@ -112,7 +112,7 @@
         ]
       },
       almacen: {
-        titulo: "バリ Almacén y Condimentos",
+        titulo: "🥫 Almacén y Condimentos",
         palabras: ["aceite", "sal", "oregano", "orégano", "mayonesa", "salsa", "vinagre", "pimienta", "pimenton", "pimentón", "azucar", "azúcar", "agua", "cacao", "canela", "frutos secos", "linaza", "semilla", "semillas", "chia", "chía", "miel"]
       }
     };
@@ -189,7 +189,7 @@
             tiempo: item.Tiempo || "15 min",
             ingredientesOriginales: rawIngredientes.map(i => i.trim()),
             ingredientes: Array.from(new Set(ingredientesLimpios)),
-            pasos: item.Pasos ? item.Pasos.split('.').filter(p => p.trim() !== '') : [],
+            pasos: item.Pasos || item.pasos || "", // Guardamos el texto completo tal cual viene de la planilla
             consejos: item.Consejos || item.consejos || "",
             foto: item.Foto || item.foto || ""
           };
@@ -320,7 +320,6 @@
     function limpiarSeleccion() {
       ingredientesSeleccionados.clear();
       
-      // Resetear estilos de todos los botones de ingrediente
       document.querySelectorAll('#contenedorCategorias button').forEach(btn => {
         btn.className = 'px-3 py-1.5 rounded-full text-xs font-medium border bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200';
       });
@@ -340,70 +339,3 @@
           return Array.from(ingredientesSeleccionados).some(ing => receta.ingredientes.includes(ing));
         } else {
           return receta.ingredientes.every(ing => ingredientesSeleccionados.has(ing));
-        }
-      });
-
-      document.getElementById('contadorRecetas').textContent = filtradas.length;
-
-      if (filtradas.length === 0) {
-        lista.innerHTML = `
-          <div class="bg-white p-6 rounded-2xl text-center text-slate-400 text-xs space-y-2">
-            <i class="fa-regular fa-face-frown text-2xl"></i>
-            <p>No encontramos recetas ${modoFiltro === 'estricto' ? 'que usen estrictamente solo esos ingredientes' : 'con esos ingredientes'}.</p>
-            ${modoFiltro === 'estricto' ? '<p class="text-[10px] text-amber-600">Tip: Prueba cambiar a "Coincidencia parcial" arriba.</p>' : ''}
-          </div>
-        `;
-        return;
-      }
-
-      filtradas.forEach(receta => {
-        const tarjeta = document.createElement('div');
-        tarjeta.className = 'bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 space-y-3';
-        
-        const htmlImagen = receta.foto ? `
-          <div class="h-40 w-full overflow-hidden bg-slate-100 relative">
-            <img src="${receta.foto}" alt="${receta.titulo}" class="w-full h-full object-cover" onerror="this.style.display='none'">
-          </div>
-        ` : '';
-
-        const htmlConsejos = receta.consejos ? `
-          <div class="bg-amber-50 border border-amber-200/60 rounded-xl p-2.5 text-[11px] text-amber-900 flex items-start gap-2 mt-2">
-            <i class="fa-solid fa-lightbulb text-amber-500 mt-0.5 text-xs"></i>
-            <div>
-              <span class="font-bold">Consejo Flash:</span> ${receta.consejos}
-            </div>
-          </div>
-        ` : '';
-
-        tarjeta.innerHTML = `
-          ${htmlImagen}
-          <div class="p-4 space-y-3">
-            <div class="flex justify-between items-start gap-2">
-              <h3 class="font-bold text-slate-800 text-sm">${receta.titulo}</h3>
-              <span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded flex items-center gap-1 font-medium whitespace-nowrap">
-                <i class="fa-regular fa-clock text-amber-500"></i> ${receta.tiempo}
-              </span>
-            </div>
-            
-            <div class="flex flex-wrap gap-1">
-              ${receta.ingredientesOriginales.map(i => `
-                <span class="text-[10px] px-2 py-0.5 rounded bg-slate-100 text-slate-600">${i}</span>
-              `).join('')}
-            </div>
-
-            ${htmlConsejos}
-
-            <details class="text-xs text-slate-600 border-t pt-2 border-slate-100">
-              <summary class="cursor-pointer font-semibold text-amber-600 hover:underline">Ver preparación</summary>
-              <ol class="list-decimal list-inside space-y-1 mt-2 pl-1">
-                ${receta.pasos.map(p => `<li>${p.trim()}</li>`).join('')}
-              </ol>
-            </details>
-          </div>
-        `;
-        lista.appendChild(tarjeta);
-      });
-    }
-  </script>
-</body>
-</html>
