@@ -43,8 +43,13 @@
             <i class="fa-solid fa-filter text-[10px] mr-1"></i> Coincidencia parcial
           </button>
           <button id="btnModoEstricto" onclick="cambiarModoFiltro('estricto')" class="flex-1 py-1.5 rounded-lg text-center transition text-slate-500 hover:text-slate-700">
-            <i class="fa-solid fa-lock text-[10px] mr-1"></i> Estricto (Proteínas)
+            <i class="fa-solid fa-lock text-[10px] mr-1"></i> Solo lo que tengo
           </button>
+        </div>
+
+        <!-- Leyenda Explicativa del Modo -->
+        <div id="leyendaModo" class="text-[11px] text-slate-500 bg-slate-50 p-2 rounded-lg border border-slate-100 text-center">
+          <i class="fa-solid fa-circle-info text-amber-500 mr-1"></i> Muestra recetas que incluyan <strong>al menos uno</strong> de tus ingredientes.
         </div>
 
         <div id="contenedorCategorias" class="space-y-2 pt-1">
@@ -87,6 +92,11 @@
     let recetasBase = [];
     let ingredientesSeleccionados = new Set();
     let modoFiltro = 'flexible';
+
+    // BÁSICOS INFALTABLES DE DESPENSA (No bloquean el modo estricto)
+    const BASICOS_DESPENSA = [
+      'agua', 'sal', 'aceite', 'aceite de oliva', 'pimienta', 'azúcar', 'azucar', 'orégano', 'oregano'
+    ];
 
     const DICCIONARIO_CATEGORIAS = {
       carnes: {
@@ -327,13 +337,16 @@
       modoFiltro = modo;
       const btnFlex = document.getElementById('btnModoFlexible');
       const btnEstr = document.getElementById('btnModoEstricto');
+      const leyenda = document.getElementById('leyendaModo');
 
       if (modo === 'flexible') {
         btnFlex.className = 'flex-1 py-1.5 rounded-lg text-center transition bg-white text-amber-600 shadow-sm';
         btnEstr.className = 'flex-1 py-1.5 rounded-lg text-center transition text-slate-500 hover:text-slate-700';
+        leyenda.innerHTML = `<i class="fa-solid fa-circle-info text-amber-500 mr-1"></i> Muestra recetas que incluyan <strong>al menos uno</strong> de tus ingredientes.`;
       } else {
         btnEstr.className = 'flex-1 py-1.5 rounded-lg text-center transition bg-white text-amber-600 shadow-sm';
         btnFlex.className = 'flex-1 py-1.5 rounded-lg text-center transition text-slate-500 hover:text-slate-700';
+        leyenda.innerHTML = `<i class="fa-solid fa-lock text-amber-500 mr-1"></i> Muestra recetas que podés preparar <strong>únicamente</strong> con tu selección (+ básicos).`;
       }
 
       filtrarYMostrarRecetas();
@@ -380,31 +393,14 @@
         if (ingredientesSeleccionados.size === 0) return true;
 
         if (modoFiltro === 'flexible') {
+          // FLEXIBLE: Al menos 1 ingrediente de los seleccionados
           return Array.from(ingredientesSeleccionados).some(ing => receta.ingredientes.includes(ing));
         } else {
-          // MODO ESTRICTO BASADO EN PROTEÍNAS
-          const arraySeleccionados = Array.from(ingredientesSeleccionados);
-
-          // Identificar si el usuario seleccionó proteínas o lácteos
-          const proteinasSeleccionadas = arraySeleccionados.filter(ing => 
-            DICCIONARIO_CATEGORIAS.carnes.palabras.some(p => ing.toLowerCase().includes(p)) ||
-            DICCIONARIO_CATEGORIAS.lacteos.palabras.some(p => ing.toLowerCase().includes(p))
+          // ESTRICTO / SOLO LO QUE TENGO:
+          // La receta NO debe requerir NINGÚN ingrediente fuera de la selección del usuario (excepto básicos de despensa)
+          return receta.ingredientes.every(ing => 
+            ingredientesSeleccionados.has(ing) || BASICOS_DESPENSA.includes(ing)
           );
-
-          // Si hay proteínas seleccionadas, la receta OBLIGATORIAMENTE debe incluir al menos una
-          if (proteinasSeleccionadas.length > 0) {
-            const tieneProteina = proteinasSeleccionadas.some(prot => receta.ingredientes.includes(prot));
-            if (!tieneProteina) return false;
-          }
-
-          // Si además seleccionó otros ingredientes (no proteínas), la receta debe contenerlos todos
-          const otrosSeleccionados = arraySeleccionados.filter(ing => !proteinasSeleccionadas.includes(ing));
-          if (otrosSeleccionados.length > 0) {
-            const tieneTodosOtros = otrosSeleccionados.every(ing => receta.ingredientes.includes(ing));
-            if (!tieneTodosOtros) return false;
-          }
-
-          return true;
         }
       });
 
@@ -414,7 +410,9 @@
         lista.innerHTML = `
           <div class="bg-white p-6 rounded-2xl text-center text-slate-400 text-xs space-y-2">
             <i class="fa-regular fa-face-frown text-2xl"></i>
-            <p>No encontramos recetas con esa combinación exacta.</p>
+            <p>${modoFiltro === 'estricto' 
+              ? 'No hay recetas que usen únicamente esa selección. Probá agregar algún otro ingrediente o cambiar a "Coincidencia parcial".' 
+              : 'No encontramos recetas con esos ingredientes.'}</p>
           </div>
         `;
         return;
