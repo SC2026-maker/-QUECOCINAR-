@@ -116,6 +116,15 @@
       }
     };
 
+    function obtenerCampo(item, clave) {
+      if (!item) return "";
+      const claveLower = clave.toLowerCase();
+      for (const k in item) {
+        if (k.toLowerCase() === claveLower) return item[k];
+      }
+      return "";
+    }
+
     function limpiarIngrediente(textoBruto) {
       if (!textoBruto) return '';
       let t = String(textoBruto).toLowerCase().trim();
@@ -173,39 +182,41 @@
 
       try {
         const respuesta = await fetch(API_URL);
-        if (!respuesta.ok) throw new Error("Status: " + respuesta.status);
+        if (!respuesta.ok) throw new Error("Status HTTP: " + respuesta.status);
         const datos = await respuesta.json();
 
         if (!Array.isArray(datos) || datos.length === 0) {
-          throw new Error("Respuesta vacía de SheetDB (verifica el límite o tu planilla)");
+          throw new Error("Respuesta vacía de SheetDB");
         }
 
-        recetasBase = datos.filter(item => item && (item.Titulo || item.titulo)).map(item => {
-          const campoIngredientes = item.Ingredientes || item.ingredientes || "";
-          const rawIngredientes = campoIngredientes ? String(campoIngredientes).split(',') : [];
-          
-          const ingredientesLimpios = rawIngredientes
-            .map(i => limpiarIngrediente(i))
-            .filter(i => i.length > 0);
+        recetasBase = datos
+          .filter(item => item && (obtenerCampo(item, 'Titulo') || obtenerCampo(item, 'ID')))
+          .map(item => {
+            const rawIngredientesStr = obtenerCampo(item, 'Ingredientes');
+            const rawIngredientes = rawIngredientesStr ? String(rawIngredientesStr).split(',') : [];
+            
+            const ingredientesLimpios = rawIngredientes
+              .map(i => limpiarIngrediente(i))
+              .filter(i => i.length > 0);
 
-          return {
-            id: item.ID || item.id || Math.random(),
-            titulo: item.Titulo || item.titulo || "Sin Título",
-            tiempo: item.Tiempo || item.tiempo || "15 min",
-            ingredientesOriginales: rawIngredientes.map(i => String(i).trim()),
-            ingredientes: Array.from(new Set(ingredientesLimpios)),
-            pasos: String(item.Pasos || item.pasos || ""),
-            consejos: String(item.Consejos || item.consejos || ""),
-            foto: String(item.Foto || item.foto || "")
-          };
-        });
+            return {
+              id: obtenerCampo(item, 'ID') || Math.random(),
+              titulo: obtenerCampo(item, 'Titulo') || "Sin Título",
+              tiempo: obtenerCampo(item, 'Tiempo') || "15 min",
+              ingredientesOriginales: rawIngredientes.map(i => String(i).trim()),
+              ingredientes: Array.from(new Set(ingredientesLimpios)),
+              pasos: String(obtenerCampo(item, 'Pasos')),
+              consejos: String(obtenerCampo(item, 'Consejos')),
+              foto: String(obtenerCampo(item, 'Foto'))
+            };
+          });
 
         generarCategoriasIngredientes();
         filtrarYMostrarRecetas();
 
       } catch (error) {
         console.error("Error al cargar:", error);
-        contCategorias.innerHTML = `<p class="text-xs text-red-500">Error al cargar categorías: ${error.message}</p>`;
+        contCategorias.innerHTML = `<p class="text-xs text-red-500">Error al procesar: ${error.message}</p>`;
         lista.innerHTML = `
           <div class="bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl text-xs text-center">
             <i class="fa-solid fa-circle-exclamation text-xl mb-1"></i>
